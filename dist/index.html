@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
@@ -20,7 +20,7 @@
       --accent-soft: rgba(56, 189, 248, 0.15);
       --danger: #f87171;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
     body {
       background: var(--bg);
       color: var(--text);
@@ -31,7 +31,7 @@
     }
     header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
-    h2 { font-size: 0.95rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    h2 { font-size: 0.95rem; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 10px; }
     .card {
       background: var(--card);
       border: 1px solid var(--border);
@@ -59,7 +59,7 @@
       font-weight: 600;
       margin-bottom: 8px;
     }
-    .countdown { font-size: 2rem; font-weight: 800; margin: 4px 0; }
+    .countdown { font-size: 1.85rem; font-weight: 800; margin: 4px 0; }
     .sub-dates { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
     .care-tip {
       background: rgba(15, 23, 42, 0.6);
@@ -75,7 +75,7 @@
     .cal-nav button { padding: 4px 10px; font-size: 0.85rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
     .cal-title { font-weight: 700; font-size: 0.95rem; min-width: 110px; text-align: center; }
     .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-    .cal-weekdays span { font-size: 0.72rem; color: var(--muted); font-weight: 600; padding-bottom: 4px; }
+    .cal-weekdays span { font-size: 0.75rem; color: var(--muted); font-weight: 600; padding-bottom: 4px; }
     .cal-cell {
       aspect-ratio: 1;
       display: flex;
@@ -163,31 +163,31 @@
 
   <header>
     <h1>MoonPhase</h1>
-    <button id="installBtn">Install App</button>
+    <button id="installBtn">安裝 App</button>
   </header>
 
   <div id="iosInstallHint" class="ios-hint">
-    To install on iPhone: tap <strong>Share</strong> in Safari, then choose <strong>"Add to Home Screen"</strong> so offline data stays saved.
+    iPhone 安裝提示：點擊 Safari 底部的 <strong>分享</strong> 圖示，選擇 <strong>「加入主畫面」</strong> 並從桌面開啟，即可永久保存離線資料。
   </div>
 
-  <!-- Status & Partner Care Card -->
+  <!-- 狀態與照護看板 -->
   <section class="card">
-    <div id="phaseBadge" class="phase-badge">Loading...</div>
+    <div id="phaseBadge" class="phase-badge">載入中...</div>
     <div id="predDays" class="countdown">--</div>
-    <div id="predDetail" class="sub-dates">Initializing engine...</div>
+    <div id="predDetail" class="sub-dates">正在初始化引擎...</div>
     <div id="careTipText" class="care-tip"></div>
 
     <div class="actions-row">
-      <button id="exportIcsBtn">Export / Share .ics</button>
-      <button id="importIcsBtn" class="secondary">Restore from .ics</button>
+      <button id="exportIcsBtn">匯出 / 分享 .ics</button>
+      <button id="importIcsBtn" class="secondary">從 .ics 還原</button>
       <input type="file" id="icsFileInput" accept=".ics,text/calendar" hidden />
     </div>
   </section>
 
-  <!-- Monthly Calendar Grid -->
+  <!-- 月曆檢視 -->
   <section class="card">
     <div class="cal-header">
-      <h2 style="margin:0;">Calendar</h2>
+      <h2 style="margin:0;">週期月曆</h2>
       <div class="cal-nav">
         <button id="prevMonthBtn" type="button">&lsaquo;</button>
         <span id="calMonthTitle" class="cal-title">--</span>
@@ -195,39 +195,39 @@
       </div>
     </div>
     <div class="cal-weekdays">
-      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
     </div>
     <div id="calendarGrid" class="cal-grid"></div>
     <div class="cal-legend">
-      <span><i class="legend-dot" style="background:#fb7185;"></i>Logged</span>
-      <span><i class="legend-dot" style="border:1px dashed #fb7185;"></i>Predicted</span>
-      <span><i class="legend-dot" style="background:#fbbf24;"></i>PMS</span>
-      <span><i class="legend-dot" style="background:#38bdf8;"></i>Ovulation</span>
+      <span><i class="legend-dot" style="background:#fb7185;"></i>已記錄</span>
+      <span><i class="legend-dot" style="border:1px dashed #fb7185;"></i>預計經期</span>
+      <span><i class="legend-dot" style="background:#fbbf24;"></i>PMS 觀察</span>
+      <span><i class="legend-dot" style="background:#38bdf8;"></i>排卵期</span>
     </div>
   </section>
 
-  <!-- Add Record Form -->
+  <!-- 新增紀錄 -->
   <section class="card">
-    <h2>Log Start Date</h2>
+    <h2>記錄經期開始日</h2>
     <form id="addForm" class="form-grid">
       <div class="row">
         <input type="date" id="dateInput" required />
         <select id="flowInput">
-          <option value="Normal">Flow: Normal</option>
-          <option value="Heavy">Flow: Heavy</option>
-          <option value="Light">Flow: Light</option>
+          <option value="正常">經血量：正常</option>
+          <option value="偏多">經血量：偏多</option>
+          <option value="偏少">經血量：偏少</option>
         </select>
       </div>
-      <input type="text" id="notesInput" placeholder="Notes (e.g., cramps, cravings, meds)" />
-      <button type="submit">Save Entry</button>
+      <input type="text" id="notesInput" placeholder="備註（例如：經痛程度、想吃的食物、止痛藥）" />
+      <button type="submit">儲存紀錄</button>
     </form>
   </section>
 
-  <!-- History List -->
+  <!-- 歷史紀錄 -->
   <section class="card">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-      <h2 style="margin:0;">History</h2>
-      <span id="avgCycleBadge" class="pill">Avg: 28d</span>
+      <h2 style="margin:0;">歷史紀錄</h2>
+      <span id="avgCycleBadge" class="pill">平均：28 天</span>
     </div>
     <ul id="recordList"></ul>
   </section>

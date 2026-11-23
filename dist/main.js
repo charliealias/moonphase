@@ -62,8 +62,8 @@ async function shareOrDownloadICS(icsContent) {
     try {
       await navigator.share({
         files: [file],
-        title: 'Cycle Calendar Alerts',
-        text: 'Import into Calendar for PMS & Day 1 reminders (also contains backup).'
+        title: '週期行事曆提醒與備份',
+        text: '匯入行事曆即可設定 PMS 與經期通知（內含完整歷史備份）。'
       });
       return;
     } catch (err) {
@@ -158,10 +158,10 @@ async function bootstrap() {
     /** @type {DashboardState} */
     const state = store.get_dashboard_state(getLocalTodayStr(), viewYear, viewMonth);
 
-    // Status & Care Card
+    // 狀態與照護看板
     document.getElementById('phaseBadge').textContent = state.phase_name;
     document.getElementById('careTipText').textContent = state.care_tip;
-    document.getElementById('avgCycleBadge').textContent = `Avg: ${state.avg_cycle}d`;
+    document.getElementById('avgCycleBadge').textContent = `平均：${state.avg_cycle} 天`;
 
     const predDaysEl = document.getElementById('predDays');
     const predDetailEl = document.getElementById('predDetail');
@@ -169,19 +169,16 @@ async function bootstrap() {
     if (state.has_records && state.days_until_next !== undefined) {
       const days = state.days_until_next;
       predDaysEl.textContent =
-        days >= 0
-          ? `In ${days} day${days === 1 ? '' : 's'}`
-          : `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} late`;
-      predDetailEl.textContent = `Next: ${state.next_period_date} • PMS window: ${state.pms_start_date}`;
+        days >= 0 ? `距離下次還有 ${days} 天` : `預計經期已延遲 ${Math.abs(days)} 天`;
+      predDetailEl.textContent = `預計下次：${state.next_period_date} ｜ PMS 觀察：${state.pms_start_date}`;
     } else {
-      predDaysEl.textContent = '--';
-      predDetailEl.textContent = 'No cycle data logged yet';
+      predDaysEl.textContent = '-- 天';
+      predDetailEl.textContent = '尚未建立任何週期紀錄';
     }
 
-    // Monthly Calendar Grid
-    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    // 月曆網格
     document.getElementById('calMonthTitle').textContent =
-      `${monthNames[state.calendar_month - 1]} ${state.calendar_year}`;
+      `${state.calendar_year} 年 ${state.calendar_month} 月`;
 
     document.getElementById('calendarGrid').innerHTML = state.calendar_days
       .map((cell) => {
@@ -193,29 +190,33 @@ async function bootstrap() {
       })
       .join('');
 
-    // History List
+    // 歷史紀錄列表
     const listEl = document.getElementById('recordList');
     if (state.history.length === 0) {
-      listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">No entries yet</li>';
+      listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">尚無紀錄</li>';
       return;
     }
 
+    // 相容舊版英文 flow 值顯示
+    const flowMap = { Normal: '正常', Heavy: '偏多', Light: '偏少' };
+
     listEl.innerHTML = state.history
-      .map(
-        (item) => `
+      .map((item) => {
+        const displayFlow = flowMap[item.flow] || item.flow;
+        return `
         <li>
           <div>
-            <strong>${item.date}</strong> <span style="color:var(--muted); font-size:0.85rem;">(${item.flow})</span>
-            ${item.interval_days != null ? `<span class="pill">${item.interval_days}d cycle</span>` : ''}
+            <strong>${item.date}</strong> <span style="color:var(--muted); font-size:0.85rem;">(${escapeHtml(displayFlow)})</span>
+            ${item.interval_days != null ? `<span class="pill">間隔 ${item.interval_days} 天</span>` : ''}
             ${item.notes ? `<div class="item-meta">${escapeHtml(item.notes)}</div>` : ''}
           </div>
-          <button class="danger" data-delete-id="${item.id}">Delete</button>
-        </li>`
-      )
+          <button class="danger" data-delete-id="${item.id}">刪除</button>
+        </li>`;
+      })
       .join('');
   }
 
-  // Month navigation
+  // 月份切換
   document.getElementById('prevMonthBtn').addEventListener('click', () => {
     viewMonth -= 1;
     if (viewMonth < 1) {
@@ -234,7 +235,7 @@ async function bootstrap() {
     render();
   });
 
-  // Tap calendar day to pre-fill date input
+  // 點擊月曆日期自動填入表單
   document.getElementById('calendarGrid').addEventListener('click', (e) => {
     const cell = /** @type {HTMLElement} */ (e.target).closest('[data-date]');
     const pickedDate = cell?.getAttribute('data-date');
@@ -244,7 +245,7 @@ async function bootstrap() {
     }
   });
 
-  // Add Record
+  // 新增紀錄
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const flowInput = /** @type {HTMLSelectElement} */ (document.getElementById('flowInput'));
@@ -265,19 +266,19 @@ async function bootstrap() {
     }
   });
 
-  // Delete Record
+  // 刪除紀錄
   document.getElementById('recordList').addEventListener('click', async (e) => {
     const target = /** @type {HTMLElement} */ (e.target);
     const idAttr = target.getAttribute('data-delete-id');
     if (!idAttr) return;
-    if (!confirm('Delete this entry?')) return;
+    if (!confirm('確定要刪除此筆紀錄嗎？')) return;
 
     const snapshot = store.delete_record(BigInt(idAttr));
     await saveRawSnapshot(snapshot);
     render();
   });
 
-  // Export / Share .ics
+  // 匯出 / 分享 .ics
   document.getElementById('exportIcsBtn').addEventListener('click', async () => {
     try {
       const ics = store.generate_ics();
@@ -287,7 +288,7 @@ async function bootstrap() {
     }
   });
 
-  // Restore from .ics
+  // 從 .ics 還原
   const icsFileInput = /** @type {HTMLInputElement} */ (document.getElementById('icsFileInput'));
   document.getElementById('importIcsBtn').addEventListener('click', () => icsFileInput.click());
 
@@ -299,7 +300,7 @@ async function bootstrap() {
       const snapshot = store.import_from_ics(text);
       await saveRawSnapshot(snapshot);
       render();
-      alert('Cycle history restored from .ics backup!');
+      alert('已成功從 .ics 檔案還原歷史紀錄！');
     } catch (err) {
       alert(String(err));
     } finally {

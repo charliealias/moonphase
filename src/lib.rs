@@ -25,9 +25,9 @@ pub struct RecordViewItem {
 #[derive(Serialize, Tsify)]
 #[tsify(into_wasm_abi)]
 pub struct CalendarDay {
-    pub day: Option<u32>, // None = leading empty padding cell before the 1st of the month
-    pub date_str: String, // "YYYY-MM-DD" or ""
-    pub status: String,   // "none" | "logged" | "predicted" | "pms" | "ovulation"
+    pub day: Option<u32>,
+    pub date_str: String,
+    pub status: String, // "none" | "logged" | "predicted" | "pms" | "ovulation"
     pub is_today: bool,
 }
 
@@ -73,10 +73,10 @@ impl CycleStore {
         notes: &str,
     ) -> Result<String, JsValue> {
         NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
-            .map_err(|_| JsValue::from_str("Invalid date format (expected YYYY-MM-DD)"))?;
+            .map_err(|_| JsValue::from_str("日期格式錯誤（需為 YYYY-MM-DD）"))?;
 
         if self.records.iter().any(|r| r.date == date_str) {
-            return Err(JsValue::from_str("A record already exists for this date"));
+            return Err(JsValue::from_str("該日期已經有紀錄了"));
         }
 
         self.records.push(CycleRecord {
@@ -106,7 +106,7 @@ impl CycleStore {
         view_month: u32,
     ) -> Result<JsValue, JsValue> {
         let today = NaiveDate::parse_from_str(today_str, "%Y-%m-%d")
-            .map_err(|_| JsValue::from_str("Invalid today date format"))?;
+            .map_err(|_| JsValue::from_str("無效的今日日期格式"))?;
 
         if self.records.is_empty() {
             let empty_grid = build_calendar_grid(view_year, view_month, today, &[], None, 28);
@@ -114,8 +114,8 @@ impl CycleStore {
                 has_records: false,
                 avg_cycle: 28,
                 cycle_day: None,
-                phase_name: "No Records Yet".to_string(),
-                care_tip: "Log at least one period start date to calculate cycle phases and reminders.".to_string(),
+                phase_name: "尚無紀錄".to_string(),
+                care_tip: "請先新增至少一筆經期開始日，系統將自動推算週期階段與照護提醒。".to_string(),
                 days_until_next: None,
                 next_period_date: None,
                 pms_start_date: None,
@@ -168,7 +168,7 @@ impl CycleStore {
 
     pub fn generate_ics(&self) -> Result<String, JsValue> {
         if self.records.is_empty() {
-            return Err(JsValue::from_str("No records available to export"));
+            return Err(JsValue::from_str("目前沒有可匯出的紀錄"));
         }
 
         let (avg_cycle, parsed_dates, _) = self.compute_stats();
@@ -183,7 +183,7 @@ impl CycleStore {
         let ics = format!(
             "BEGIN:VCALENDAR\r\n\
              VERSION:2.0\r\n\
-             PRODID:-//MoonPhase//CycleEngine//EN\r\n\
+             PRODID:-//MoonPhase//CycleEngine//ZH-HANT\r\n\
              CALSCALE:GREGORIAN\r\n\
              METHOD:PUBLISH\r\n\
              X-CYCLE-BACKUP:{}\r\n\
@@ -192,11 +192,11 @@ impl CycleStore {
              DTSTAMP:{}\r\n\
              DTSTART;VALUE=DATE:{}\r\n\
              DTEND;VALUE=DATE:{}\r\n\
-             SUMMARY:PMS Window Starts\r\n\
-             DESCRIPTION:Late luteal phase (~5 days prior). Keep plans low-stress and comfort snacks handy.\r\n\
+             SUMMARY:經前症候群 (PMS) 觀察期開始\r\n\
+             DESCRIPTION:黃體期後期（預計經期前約 5 天），情緒與身體較敏感，宜保持行程輕鬆並準備舒適點心。\r\n\
              BEGIN:VALARM\r\n\
              ACTION:DISPLAY\r\n\
-             DESCRIPTION:PMS Window Reminder\r\n\
+             DESCRIPTION:PMS 觀察期提醒\r\n\
              TRIGGER:PT9H\r\n\
              END:VALARM\r\n\
              END:VEVENT\r\n\
@@ -205,16 +205,16 @@ impl CycleStore {
              DTSTAMP:{}\r\n\
              DTSTART;VALUE=DATE:{}\r\n\
              DTEND;VALUE=DATE:{}\r\n\
-             SUMMARY:Expected Cycle Start (Day 1)\r\n\
-             DESCRIPTION:Based on {}-day avg cycle. Keep warm drinks and pain relief ready.\r\n\
+             SUMMARY:預計生理期開始 (Day 1)\r\n\
+             DESCRIPTION:依平均 {} 天週期推算，請留意保暖並備妥熱飲與止痛藥。\r\n\
              BEGIN:VALARM\r\n\
              ACTION:DISPLAY\r\n\
-             DESCRIPTION:Expected Cycle Starts Tomorrow\r\n\
+             DESCRIPTION:明日預計生理期開始\r\n\
              TRIGGER:-PT15H\r\n\
              END:VALARM\r\n\
              BEGIN:VALARM\r\n\
              ACTION:DISPLAY\r\n\
-             DESCRIPTION:Expected Cycle Day 1\r\n\
+             DESCRIPTION:今日預計生理期 Day 1\r\n\
              TRIGGER:PT9H\r\n\
              END:VALARM\r\n\
              END:VEVENT\r\n\
@@ -239,11 +239,11 @@ impl CycleStore {
         let backup_line = unfolded
             .lines()
             .find(|line| line.starts_with("X-CYCLE-BACKUP:"))
-            .ok_or_else(|| JsValue::from_str("No embedded cycle backup found in this .ics file"))?;
+            .ok_or_else(|| JsValue::from_str("此 .ics 檔案中找不到內嵌的備份資料"))?;
 
         let raw_json = backup_line.trim_start_matches("X-CYCLE-BACKUP:");
         let mut imported: Vec<CycleRecord> = serde_json::from_str(raw_json)
-            .map_err(|e| JsValue::from_str(&format!("Corrupted backup payload: {}", e)))?;
+            .map_err(|e| JsValue::from_str(&format!("備份資料格式損毀：{}", e)))?;
 
         imported.sort_by(|a, b| b.date.cmp(&a.date));
         self.records = imported;
@@ -373,36 +373,40 @@ fn build_calendar_grid(
 
 fn evaluate_phase(cycle_day: i64, avg_cycle: i64, ovulation_day: i64) -> (String, String) {
     if cycle_day < 1 {
-        ("Scheduled".to_string(), "Upcoming logged date.".to_string())
+        (
+            "已排程（尚未開始）".to_string(),
+            "已預先記錄未來日期，屆時請留意身體狀況與保暖。".to_string(),
+        )
     } else if cycle_day <= 5 {
         (
-            format!("Menstrual Phase (Day {})", cycle_day),
-            "Prioritize rest, warmth, and comfort food. Watch for cramps or fatigue.".to_string(),
+            format!("行經期 (第 {} 天)", cycle_day),
+            "身體較容易疲倦或經痛，建議準備熱飲、暖暖包與止痛藥，避免高強度或吹風行程。".to_string(),
         )
     } else if cycle_day < ovulation_day - 2 {
         (
-            format!("Follicular Phase (Day {})", cycle_day),
-            "Energy and mood are rebounding. Great window for active dates.".to_string(),
+            format!("濾泡期 (第 {} 天)", cycle_day),
+            "精神與體力逐漸回升，情緒通常較穩定，適合安排戶外活動或運動約會。".to_string(),
         )
     } else if cycle_day <= ovulation_day + 2 {
         (
-            format!("Ovulation Window (Day {})", cycle_day),
-            "Peak energy window (also highest fertility window).".to_string(),
+            format!("排卵期窗口 (第 {} 天)", cycle_day),
+            "體力與活力處於週期高峰（同時為高受孕機率窗口，請留意防護措施）。".to_string(),
         )
     } else if cycle_day <= avg_cycle - 5 {
         (
-            format!("Early Luteal Phase (Day {})", cycle_day),
-            "Energy gradually tapering down; keep routines steady.".to_string(),
+            format!("黃體期前期 (第 {} 天)", cycle_day),
+            "體力開始緩步下降，作息宜保持規律、避免過度熬夜。".to_string(),
         )
     } else if cycle_day <= avg_cycle {
         (
-            format!("Late Luteal / PMS Window (Day {})", cycle_day),
-            "Higher chance of PMS sensitivity, bloating, or cravings. Keep plans low-stress.".to_string(),
+            format!("經前症候群 PMS 窗口 (第 {} 天)", cycle_day),
+            "黃體素波動容易引發水腫、嗜甜或情緒敏感，多一點耐心傾聽，可準備她喜歡的點心。".to_string(),
         )
     } else {
+        let overdue = cycle_day - avg_cycle;
         (
-            format!("Late ({} days overdue)", cycle_day - avg_cycle),
-            "Cycle is running longer than average—check in gently without pressure.".to_string(),
+            format!("預計經期已延遲 {} 天 (第 {} 天)", overdue, cycle_day),
+            "週期較平均值略長（壓力或作息改變皆可能影響），溫和關心即可，無需過度施壓。".to_string(),
         )
     }
 }
@@ -414,8 +418,8 @@ mod tests {
     #[test]
     fn test_ics_roundtrip() {
         let mut store = CycleStore::new(None);
-        store.add_record(1, "2026-10-01", "Normal", "").unwrap();
-        store.add_record(2, "2026-10-30", "Heavy", "Cravings").unwrap();
+        store.add_record(1, "2026-10-01", "正常", "").unwrap();
+        store.add_record(2, "2026-10-30", "偏多", "想吃甜食").unwrap();
 
         let ics = store.generate_ics().unwrap();
         assert!(ics.contains("DTSTART;VALUE=DATE:20261123"));
@@ -424,6 +428,6 @@ mod tests {
         let mut restored = CycleStore::new(None);
         restored.import_from_ics(&ics).unwrap();
         assert_eq!(restored.records.len(), 2);
-        assert_eq!(restored.records[0].notes, "Cravings");
+        assert_eq!(restored.records[0].notes, "想吃甜食");
     }
 }
