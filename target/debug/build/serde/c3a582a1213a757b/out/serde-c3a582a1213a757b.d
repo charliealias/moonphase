@@ -1,0 +1,14 @@
+C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/c3a582a1213a757b\out\serde-c3a582a1213a757b.d: C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/72bfc3d508d9bca4\out/private.rs
+
+C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/c3a582a1213a757b\out\libserde-c3a582a1213a757b.rlib: C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/72bfc3d508d9bca4\out/private.rs
+
+C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/c3a582a1213a757b\out\libserde-c3a582a1213a757b.rmeta: C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/72bfc3d508d9bca4\out/private.rs
+
+C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\lib.rs:
+C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\integer128.rs:
+C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\mod.rs:
+C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\de.rs:
+C:\Users\chiuy\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.229\src\private\ser.rs:
+C:\Users\chiuy\Desktop\cycle-tracker\target\debug\build\serde/72bfc3d508d9bca4\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\chiuy\\Desktop\\cycle-tracker\\target\\debug\\build\\serde/72bfc3d508d9bca4\\out
