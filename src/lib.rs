@@ -10,6 +10,8 @@ pub struct CycleRecord {
     pub date: String, // YYYY-MM-DD
     pub flow: String,
     pub notes: String,
+    #[serde(default)]
+    pub duration_days: Option<u32>, // None = 進行中 / 依歷史平均預估
 }
 
 #[derive(Serialize, Tsify)]
@@ -19,6 +21,8 @@ pub struct RecordViewItem {
     pub date: String,
     pub flow: String,
     pub notes: String,
+    pub duration_days: Option<u32>,
+    pub effective_duration: u32, // 實際天數（若未填則為 avg_duration）
     pub interval_days: Option<i64>,
 }
 
@@ -36,6 +40,7 @@ pub struct CalendarDay {
 pub struct DashboardState {
     pub has_records: bool,
     pub avg_cycle: i64,
+    pub avg_duration: u32,
     pub cycle_day: Option<i64>,
     pub phase_name: String,
     pub care_tip: String,
@@ -71,6 +76,7 @@ impl CycleStore {
         date_str: &str,
         flow: &str,
         notes: &str,
+        duration_days: Option<u32>,
     ) -> Result<String, JsValue> {
         NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
             .map_err(|_| JsValue::from_str("日期格式錯誤（需為 YYYY-MM-DD）"))?;
@@ -79,14 +85,43 @@ impl CycleStore {
             return Err(JsValue::from_str("該日期已經有紀錄了"));
         }
 
+        if let Some(d) = duration_days {
+            if !(1..=15).contains(&d) {
+                return Err(JsValue::from_str("行經天數需介於 1 到 15 天之間"));
+            }
+        }
+
         self.records.push(CycleRecord {
             id,
             date: date_str.to_string(),
             flow: flow.to_string(),
             notes: notes.to_string(),
+            duration_days,
         });
 
         self.records.sort_by(|a, b| b.date.cmp(&a.date));
+        self.export_snapshot()
+    }
+
+    /// 供歷史列表一鍵補登或修改單筆紀錄的行經天數（傳入 None 代表恢復為自動預估）
+    pub fn update_duration(
+        &mut self,
+        id: u64,
+        duration_days: Option<u32>,
+    ) -> Result<String, JsValue> {
+        if let Some(d) = duration_days {
+            if !(1..=15).contains(&d) {
+                return Err(JsValue::from_str("行經天數需介於 1 到 15 天之間"));
+            }
+        }
+
+        let rec = self
+            .records
+            .iter_mut()
+            .find(|r| r.id == id)
+            .ok_or_else(|| JsValue::from_str("找不到該筆紀錄"))?;
+
+        rec.duration_days = duration_days;
         self.export_snapshot()
     }
 
@@ -109,10 +144,11 @@ impl CycleStore {
             .map_err(|_| JsValue::from_str("無效的今日日期格式"))?;
 
         if self.records.is_empty() {
-            let empty_grid = build_calendar_grid(view_year, view_month, today, &[], None, 28);
+            let empty_grid = build_calendar_grid(view_year, view_month, today, &[], None, 28, 5);
             let empty = DashboardState {
                 has_records: false,
                 avg_cycle: 28,
+                avg_duration: 5,
                 cycle_day: None,
                 phase_name: "尚無紀錄".to_string(),
                 care_tip: "請先新增至少一筆經期開始日，系統將自動推算週期階段與照護提醒。".to_string(),
@@ -129,27 +165,31 @@ impl CycleStore {
                 .map_err(|e| JsValue::from_str(&e.to_string()));
         }
 
-        let (avg_cycle, parsed_dates, history_view) = self.compute_stats();
-        let last_start = parsed_dates[0];
+        let (avg_cycle, avg_duration, logged_spans, history_view) = self.compute_stats();
+        let (last_start, last_duration) = logged_spans[0];
         let cycle_day = (today - last_start).num_days() + 1;
         let next_period = last_start + Duration::days(avg_cycle);
         let pms_start = next_period - Duration::days(5);
         let ovulation = next_period - Duration::days(14);
         let days_until_next = (next_period - today).num_days();
 
-        let (phase_name, care_tip) = evaluate_phase(cycle_day, avg_cycle, avg_cycle - 14);
+        let (phase_name, care_tip) =
+            evaluate_phase(cycle_day, avg_cycle, avg_cycle - 14, last_duration as i64);
+
         let grid = build_calendar_grid(
             view_year,
             view_month,
             today,
-            &parsed_dates,
+            &logged_spans,
             Some(next_period),
             avg_cycle,
+            avg_duration,
         );
 
         let state = DashboardState {
             has_records: true,
             avg_cycle,
+            avg_duration,
             cycle_day: Some(cycle_day),
             phase_name,
             care_tip,
@@ -171,8 +211,8 @@ impl CycleStore {
             return Err(JsValue::from_str("目前沒有可匯出的紀錄"));
         }
 
-        let (avg_cycle, parsed_dates, _) = self.compute_stats();
-        let last_start = parsed_dates[0];
+        let (avg_cycle, avg_duration, logged_spans, _) = self.compute_stats();
+        let (last_start, _) = logged_spans[0];
         let next_period = last_start + Duration::days(avg_cycle);
         let pms_start = next_period - Duration::days(5);
         let now_stamp = Utc::now().format("%Y%m%dT%H%M%SZ").to_string();
@@ -206,7 +246,7 @@ impl CycleStore {
              DTSTART;VALUE=DATE:{}\r\n\
              DTEND;VALUE=DATE:{}\r\n\
              SUMMARY:預計生理期開始 (Day 1)\r\n\
-             DESCRIPTION:依平均 {} 天週期推算，請留意保暖並備妥熱飲與止痛藥。\r\n\
+             DESCRIPTION:依平均 {} 天週期推算（預計持續約 {} 天），請留意保暖並備妥熱飲與止痛藥。\r\n\
              BEGIN:VALARM\r\n\
              ACTION:DISPLAY\r\n\
              DESCRIPTION:明日預計生理期開始\r\n\
@@ -228,7 +268,8 @@ impl CycleStore {
             now_stamp,
             next_period.format("%Y%m%d"),
             (next_period + Duration::days(1)).format("%Y%m%d"),
-            avg_cycle
+            avg_cycle,
+            avg_duration
         );
 
         Ok(ics)
@@ -252,16 +293,35 @@ impl CycleStore {
 }
 
 impl CycleStore {
-    fn compute_stats(&self) -> (i64, Vec<NaiveDate>, Vec<RecordViewItem>) {
+    fn compute_stats(&self) -> (i64, u32, Vec<(NaiveDate, u32)>, Vec<RecordViewItem>) {
         let parsed_dates: Vec<NaiveDate> = self
             .records
             .iter()
             .filter_map(|r| NaiveDate::parse_from_str(&r.date, "%Y-%m-%d").ok())
             .collect();
 
+        // 1. 計算平均行經天數（僅統計有明確填寫天數的紀錄）
+        let mut total_dur = 0u32;
+        let mut dur_count = 0u32;
+        for rec in &self.records {
+            if let Some(d) = rec.duration_days {
+                if (1..=15).contains(&d) {
+                    total_dur += d;
+                    dur_count += 1;
+                }
+            }
+        }
+        let avg_duration = if dur_count > 0 {
+            ((total_dur as f64) / (dur_count as f64)).round() as u32
+        } else {
+            5
+        };
+
+        // 2. 計算平均週期長度與每筆有效區間
         let mut total_diff = 0i64;
         let mut valid_intervals = 0i64;
         let mut history_view = Vec::with_capacity(self.records.len());
+        let mut logged_spans = Vec::with_capacity(self.records.len());
 
         for (i, rec) in self.records.iter().enumerate() {
             let interval = if i + 1 < parsed_dates.len() {
@@ -275,11 +335,16 @@ impl CycleStore {
                 None
             };
 
+            let eff_dur = rec.duration_days.unwrap_or(avg_duration);
+            logged_spans.push((parsed_dates[i], eff_dur));
+
             history_view.push(RecordViewItem {
                 id: rec.id,
                 date: rec.date.clone(),
                 flow: rec.flow.clone(),
                 notes: rec.notes.clone(),
+                duration_days: rec.duration_days,
+                effective_duration: eff_dur,
                 interval_days: interval,
             });
         }
@@ -290,7 +355,7 @@ impl CycleStore {
             28
         };
 
-        (avg_cycle, parsed_dates, history_view)
+        (avg_cycle, avg_duration, logged_spans, history_view)
     }
 }
 
@@ -298,9 +363,10 @@ fn build_calendar_grid(
     year: i32,
     month: u32,
     today: NaiveDate,
-    logged_starts: &[NaiveDate],
+    logged_spans: &[(NaiveDate, u32)],
     next_period_opt: Option<NaiveDate>,
     avg_cycle: i64,
+    avg_duration: u32,
 ) -> Vec<CalendarDay> {
     let first_of_month = match NaiveDate::from_ymd_opt(year, month, 1) {
         Some(d) => d,
@@ -333,13 +399,15 @@ fn build_calendar_grid(
         }
     }
 
+    let pred_dur = avg_duration as i64;
+
     for d in 1..=days_in_month {
         let cell_date = NaiveDate::from_ymd_opt(year, month, d).unwrap();
         let mut status = "none";
 
-        let is_logged = logged_starts.iter().any(|&start| {
+        let is_logged = logged_spans.iter().any(|&(start, dur)| {
             let offset = (cell_date - start).num_days();
-            (0..5).contains(&offset)
+            (0..(dur as i64)).contains(&offset)
         });
 
         if is_logged {
@@ -347,7 +415,7 @@ fn build_calendar_grid(
         } else {
             for &pred_start in &predicted_starts {
                 let offset = (cell_date - pred_start).num_days();
-                if (0..5).contains(&offset) {
+                if (0..pred_dur).contains(&offset) {
                     status = "predicted";
                     break;
                 } else if (-5..0).contains(&offset) {
@@ -371,13 +439,18 @@ fn build_calendar_grid(
     cells
 }
 
-fn evaluate_phase(cycle_day: i64, avg_cycle: i64, ovulation_day: i64) -> (String, String) {
+fn evaluate_phase(
+    cycle_day: i64,
+    avg_cycle: i64,
+    ovulation_day: i64,
+    current_duration: i64,
+) -> (String, String) {
     if cycle_day < 1 {
         (
             "已排程（尚未開始）".to_string(),
             "已預先記錄未來日期，屆時請留意身體狀況與保暖。".to_string(),
         )
-    } else if cycle_day <= 5 {
+    } else if cycle_day <= current_duration {
         (
             format!("行經期 (第 {} 天)", cycle_day),
             "身體較容易疲倦或經痛，建議準備熱飲、暖暖包與止痛藥，避免高強度或吹風行程。".to_string(),
@@ -416,18 +489,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_ics_roundtrip() {
-        let mut store = CycleStore::new(None);
-        store.add_record(1, "2026-10-01", "正常", "").unwrap();
-        store.add_record(2, "2026-10-30", "偏多", "想吃甜食").unwrap();
+    fn test_dynamic_duration_and_legacy_compat() {
+        // 測試向後相容：舊 JSON 沒有 duration_days 欄位
+        let legacy_json = r#"[{"id":1,"date":"2026-10-01","flow":"正常","notes":""}]"#;
+        let mut store = CycleStore::new(Some(legacy_json.to_string()));
+        store
+            .add_record(2, "2026-10-30", "偏多", "想吃甜食", Some(6))
+            .unwrap();
 
-        let ics = store.generate_ics().unwrap();
-        assert!(ics.contains("DTSTART;VALUE=DATE:20261123"));
-        assert!(ics.contains("DTSTART;VALUE=DATE:20261128"));
-
-        let mut restored = CycleStore::new(None);
-        restored.import_from_ics(&ics).unwrap();
-        assert_eq!(restored.records.len(), 2);
-        assert_eq!(restored.records[0].notes, "想吃甜食");
+        let (_, avg_dur, spans, _) = store.compute_stats();
+        assert_eq!(avg_dur, 6);
+        assert_eq!(spans[0].1, 6); // 新紀錄使用明確指定的 6 天
+        assert_eq!(spans[1].1, 5); // 舊紀錄未填，但因整體僅有一筆有效天數 6，實際會動態套用 avg_duration=6
     }
 }

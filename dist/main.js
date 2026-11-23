@@ -96,7 +96,7 @@ async function bootstrap() {
     navigator.storage.persist().catch(() => {});
   }
 
-  // Register Service Worker with seamless auto-update
+  // Service Worker 自動更新
   if ('serviceWorker' in navigator) {
     let refreshing = false;
 
@@ -115,7 +115,7 @@ async function bootstrap() {
     }).catch(console.error);
   }
 
-  // Platform install hints
+  // iOS / Android 安裝提示
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -142,7 +142,7 @@ async function bootstrap() {
     deferredPrompt = null;
   });
 
-  // Initialize Rust Wasm Store
+  // 初始化 Rust Wasm Store
   await init();
   const initialSnapshot = await loadRawSnapshot();
   const store = new CycleStore(initialSnapshot);
@@ -161,7 +161,8 @@ async function bootstrap() {
     // 狀態與照護看板
     document.getElementById('phaseBadge').textContent = state.phase_name;
     document.getElementById('careTipText').textContent = state.care_tip;
-    document.getElementById('avgCycleBadge').textContent = `平均：${state.avg_cycle} 天`;
+    document.getElementById('avgCycleBadge').textContent =
+      `週期 ${state.avg_cycle}d ｜ 經期 ${state.avg_duration}d`;
 
     const predDaysEl = document.getElementById('predDays');
     const predDetailEl = document.getElementById('predDetail');
@@ -190,27 +191,39 @@ async function bootstrap() {
       })
       .join('');
 
-    // 歷史紀錄列表
+    // 歷史紀錄列表（含一鍵修改行經天數下拉選單）
     const listEl = document.getElementById('recordList');
     if (state.history.length === 0) {
       listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">尚無紀錄</li>';
       return;
     }
 
-    // 相容舊版英文 flow 值顯示
     const flowMap = { Normal: '正常', Heavy: '偏多', Light: '偏少' };
+    const durationChoices = [3, 4, 5, 6, 7, 8];
 
     listEl.innerHTML = state.history
       .map((item) => {
         const displayFlow = flowMap[item.flow] || item.flow;
+        const optionsHtml = [
+          `<option value="" ${item.duration_days == null ? 'selected' : ''}>預估(${item.effective_duration}天)</option>`,
+          ...durationChoices.map(
+            (d) => `<option value="${d}" ${item.duration_days === d ? 'selected' : ''}>${d} 天</option>`
+          )
+        ].join('');
+
         return `
         <li>
-          <div>
-            <strong>${item.date}</strong> <span style="color:var(--muted); font-size:0.85rem;">(${escapeHtml(displayFlow)})</span>
-            ${item.interval_days != null ? `<span class="pill">間隔 ${item.interval_days} 天</span>` : ''}
+          <div style="min-width:0; flex:1;">
+            <strong>${item.date}</strong> <span style="color:var(--muted); font-size:0.83rem;">(${escapeHtml(displayFlow)})</span>
+            ${item.interval_days != null ? `<span class="pill">間隔 ${item.interval_days}d</span>` : ''}
             ${item.notes ? `<div class="item-meta">${escapeHtml(item.notes)}</div>` : ''}
           </div>
-          <button class="danger" data-delete-id="${item.id}">刪除</button>
+          <div class="history-actions">
+            <select class="mini-select" data-duration-id="${item.id}" aria-label="行經天數">
+              ${optionsHtml}
+            </select>
+            <button class="danger" data-delete-id="${item.id}">刪除</button>
+          </div>
         </li>`;
       })
       .join('');
@@ -274,33 +287,35 @@ async function bootstrap() {
 
     const idx = tokens.indexOf(tag);
     if (idx >= 0) {
-      tokens.splice(idx, 1); // 已存在則移除
+      tokens.splice(idx, 1);
     } else {
-      tokens.push(tag);      // 尚未選取則加入
+      tokens.push(tag);
     }
 
     notesInput.value = tokens.join('、');
     syncChipStates();
   });
 
-  // 手動打字或刪除文字時，同步更新上方膠囊高亮狀態
   notesInput.addEventListener('input', syncChipStates);
 
   // 新增紀錄
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const flowInput = /** @type {HTMLSelectElement} */ (document.getElementById('flowInput'));
-    const notesInput = /** @type {HTMLInputElement} */ (document.getElementById('notesInput'));
+    const durationInput = /** @type {HTMLSelectElement} */ (document.getElementById('durationInput'));
+    const durVal = durationInput.value ? Number(durationInput.value) : undefined;
 
     try {
       const snapshot = store.add_record(
         BigInt(Date.now()),
         dateInput.value,
         flowInput.value,
-        notesInput.value.trim()
+        notesInput.value.trim(),
+        durVal
       );
       await saveRawSnapshot(snapshot);
       notesInput.value = '';
+      durationInput.value = '';
       syncChipStates();
       render();
     } catch (err) {
@@ -308,7 +323,23 @@ async function bootstrap() {
     }
   });
 
-  // 刪除紀錄
+  // 歷史列表：一鍵修改單筆行經天數
+  document.getElementById('recordList').addEventListener('change', async (e) => {
+    const target = /** @type {HTMLSelectElement} */ (e.target);
+    const idAttr = target.getAttribute('data-duration-id');
+    if (!idAttr) return;
+
+    const durVal = target.value ? Number(target.value) : undefined;
+    try {
+      const snapshot = store.update_duration(BigInt(idAttr), durVal);
+      await saveRawSnapshot(snapshot);
+      render();
+    } catch (err) {
+      alert(String(err));
+    }
+  });
+
+  // 歷史列表：刪除紀錄
   document.getElementById('recordList').addEventListener('click', async (e) => {
     const target = /** @type {HTMLElement} */ (e.target);
     const idAttr = target.getAttribute('data-delete-id');
