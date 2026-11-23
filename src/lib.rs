@@ -500,6 +500,24 @@ mod tests {
         let (_, avg_dur, spans, _) = store.compute_stats();
         assert_eq!(avg_dur, 6);
         assert_eq!(spans[0].1, 6); // 新紀錄使用明確指定的 6 天
-        assert_eq!(spans[1].1, 5); // 舊紀錄未填，但因整體僅有一筆有效天數 6，實際會動態套用 avg_duration=6
+        assert_eq!(spans[1].1, 6); // 舊紀錄未填，自動套用動態平均天數 avg_dur (6 天)
+    }
+
+    #[test]
+    fn test_ics_roundtrip() {
+        let mut store = CycleStore::new(None);
+        store.add_record(1, "2026-10-01", "正常", "", Some(5)).unwrap();
+        store
+            .add_record(2, "2026-10-30", "偏多", "想吃甜食", Some(7))
+            .unwrap();
+
+        let ics = store.generate_ics().unwrap();
+        assert!(ics.contains("DTSTART;VALUE=DATE:20261123"));
+        assert!(ics.contains("DTSTART;VALUE=DATE:20261128"));
+
+        let mut restored = CycleStore::new(None);
+        restored.import_from_ics(&ics).unwrap();
+        assert_eq!(restored.records.len(), 2);
+        assert_eq!(restored.records[0].duration_days, Some(7));
     }
 }
