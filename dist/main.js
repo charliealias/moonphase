@@ -245,6 +245,47 @@ async function bootstrap() {
     }
   });
 
+  // 快速症狀標籤多選與備註欄雙向同步
+  const notesInput = /** @type {HTMLInputElement} */ (document.getElementById('notesInput'));
+  const symptomChipsEl = document.getElementById('symptomChips');
+
+  function syncChipStates() {
+    if (!symptomChipsEl) return;
+    const currentTokens = notesInput.value
+      .split(/[、,，]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    symptomChipsEl.querySelectorAll('[data-tag]').forEach((btn) => {
+      const tag = btn.getAttribute('data-tag') || '';
+      btn.classList.toggle('active', currentTokens.includes(tag));
+    });
+  }
+
+  symptomChipsEl?.addEventListener('click', (e) => {
+    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-tag]');
+    const tag = btn?.getAttribute('data-tag');
+    if (!tag) return;
+
+    const tokens = notesInput.value
+      .split(/[、,，]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    const idx = tokens.indexOf(tag);
+    if (idx >= 0) {
+      tokens.splice(idx, 1); // 已存在則移除
+    } else {
+      tokens.push(tag);      // 尚未選取則加入
+    }
+
+    notesInput.value = tokens.join('、');
+    syncChipStates();
+  });
+
+  // 手動打字或刪除文字時，同步更新上方膠囊高亮狀態
+  notesInput.addEventListener('input', syncChipStates);
+
   // 新增紀錄
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -260,6 +301,7 @@ async function bootstrap() {
       );
       await saveRawSnapshot(snapshot);
       notesInput.value = '';
+      syncChipStates();
       render();
     } catch (err) {
       alert(String(err));

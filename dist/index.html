@@ -361,6 +361,31 @@
       font-size: 0.73rem;
       margin-left: 6px;
     }
+
+    .chip-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .chip {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      box-shadow: none;
+      transition: all 0.15s ease;
+    }
+
+    .chip.active {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: rgba(125, 211, 252, 0.45);
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
@@ -422,7 +447,20 @@
           <option value="偏少">經血量：偏少</option>
         </select>
       </div>
-      <input type="text" id="notesInput" placeholder="備註（例如：經痛程度、想吃的食物、止痛藥）" />
+
+      <!-- 快速症狀標籤（type="button" 避免誤觸送出表單） -->
+      <div id="symptomChips" class="chip-group">
+        <button type="button" class="chip" data-tag="經痛">經痛</button>
+        <button type="button" class="chip" data-tag="腰痠">腰痠</button>
+        <button type="button" class="chip" data-tag="嗜甜">嗜甜</button>
+        <button type="button" class="chip" data-tag="疲倦">疲倦</button>
+        <button type="button" class="chip" data-tag="水腫">水腫</button>
+        <button type="button" class="chip" data-tag="情緒敏感">情緒敏感</button>
+        <button type="button" class="chip" data-tag="頭痛">頭痛</button>
+        <button type="button" class="chip" data-tag="止痛藥">止痛藥</button>
+      </div>
+
+      <input type="text" id="notesInput" placeholder="點選上方標籤或自行輸入備註..." />
       <button type="submit">儲存紀錄</button>
     </form>
   </section>
