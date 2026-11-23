@@ -383,6 +383,49 @@
       color: var(--text);
       border: 1px solid var(--border);
     }
+
+    /* 歷史紀錄摺疊抽屜 */
+    details.history-drawer summary {
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details.history-drawer summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .drawer-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    .drawer-chevron {
+      display: inline-block;
+      font-size: 0.75rem;
+      transition: transform 0.2s ease;
+      color: var(--muted);
+    }
+
+    details.history-drawer[open] .drawer-chevron {
+      transform: rotate(90deg);
+      color: var(--accent);
+    }
+
+    details.history-drawer[open] summary {
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
   </style>
 </head>
 <body>
@@ -431,6 +474,19 @@
       <span><i class="legend-dot" style="background:#7dd3fc;"></i>排卵期</span>
     </div>
   </section>
+  <!-- 歷史紀錄（可收放抽屜，位於月曆下方） -->
+  <section class="card" style="padding: 14px 18px;">
+    <details id="historyDrawer" class="history-drawer">
+      <summary>
+        <span class="drawer-title">
+          <span class="drawer-chevron">&#9654;</span>
+          歷史紀錄 <span id="historyCount" style="font-weight:400; opacity:0.75;">(0)</span>
+        </span>
+        <span id="avgCycleBadge" class="pill" style="margin:0;">週期 28d ｜ 經期 5d</span>
+      </summary>
+      <ul id="recordList"></ul>
+    </details>
+  </section>
 
   <!-- 新增紀錄 -->
   <section class="card">
@@ -468,15 +524,6 @@
       <input type="text" id="notesInput" placeholder="點選上方標籤或自行輸入備註..." />
       <button type="submit">儲存紀錄</button>
     </form>
-  </section>
-
-  <!-- 歷史紀錄 -->
-  <section class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-      <h2 style="margin:0;">歷史紀錄</h2>
-      <span id="avgCycleBadge" class="pill">週期 28d ｜ 經期 5d</span>
-    </div>
-    <ul id="recordList"></ul>
   </section>
 
   <script type="module" src="./main.js"></script>

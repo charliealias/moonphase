@@ -163,7 +163,8 @@ async function bootstrap() {
     document.getElementById('careTipText').textContent = state.care_tip;
     document.getElementById('avgCycleBadge').textContent =
       `週期 ${state.avg_cycle}d ｜ 經期 ${state.avg_duration}d`;
-
+    const countEl = document.getElementById('historyCount');
+    if (countEl) countEl.textContent = `(${state.history.length})`;
     const predDaysEl = document.getElementById('predDays');
     const predDetailEl = document.getElementById('predDetail');
 
