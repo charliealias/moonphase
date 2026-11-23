@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#0f172a" />
+  <meta name="theme-color" content="#090d16" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <title>MoonPhase</title>
@@ -11,150 +11,354 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <style>
     :root {
-      --bg: #0f172a;
-      --card: #1e293b;
-      --border: #334155;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-soft: rgba(56, 189, 248, 0.15);
-      --danger: #f87171;
+      --bg: #090d16;
+      --card: rgba(23, 30, 46, 0.78);
+      --card-solid: #151c2c;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.14);
+      --text: #f1f5f9;
+      --muted: #8b9bb4;
+      --accent: #7dd3fc;
+      --accent-glow: rgba(56, 189, 248, 0.16);
+      --rose: #fb7185;
+      --rose-bg: rgba(251, 113, 133, 0.18);
+      --amber: #fbbf24;
+      --amber-bg: rgba(251, 191, 36, 0.15);
+      --danger: #fca5a5;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Noto Sans TC", "PingFang TC", sans-serif;
+    }
+
     body {
-      background: var(--bg);
+      background: radial-gradient(circle at 50% -10%, #17233b 0%, var(--bg) 55%);
+      background-color: var(--bg);
       color: var(--text);
-      padding: calc(16px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
-      max-width: 480px;
+      padding: calc(18px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+      max-width: 440px;
       margin: 0 auto;
-      line-height: 1.5;
+      line-height: 1.55;
+      font-variant-numeric: tabular-nums;
+      min-height: 100vh;
     }
-    header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-    h1 { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.02em; color: var(--text); }
-    h2 { font-size: 0.95rem; font-weight: 600; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 10px; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      padding: 0 4px;
+    }
+
+    h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      background: linear-gradient(135deg, #f8fafc 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    h2 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      margin-bottom: 12px;
+    }
+
     .card {
       background: var(--card);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 22px;
+      padding: 18px;
       margin-bottom: 14px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
+
+    /* 主狀態卡片專屬微光層次 */
+    .hero-card {
+      background: linear-gradient(160deg, rgba(30, 41, 66, 0.85) 0%, rgba(18, 24, 38, 0.9) 100%);
+      border: 1px solid var(--border-strong);
+      position: relative;
+      overflow: hidden;
+    }
+
     .ios-hint {
       display: none;
-      background: var(--accent-soft);
-      border: 1px solid var(--accent);
-      color: #e0f2fe;
-      padding: 10px 14px;
-      border-radius: 12px;
-      font-size: 0.85rem;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      color: #bae6fd;
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-size: 0.82rem;
       margin-bottom: 14px;
     }
+
     .phase-badge {
-      display: inline-block;
-      background: var(--accent-soft);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--accent-glow);
       color: var(--accent);
-      padding: 4px 10px;
+      border: 1px solid rgba(125, 211, 252, 0.25);
+      padding: 4px 12px;
       border-radius: 999px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       font-weight: 600;
-      margin-bottom: 8px;
+      margin-bottom: 10px;
     }
-    .countdown { font-size: 1.85rem; font-weight: 800; margin: 4px 0; }
-    .sub-dates { font-size: 0.85rem; color: var(--muted); margin-bottom: 10px; }
+
+    .countdown {
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #ffffff;
+      margin: 2px 0 4px;
+    }
+
+    .sub-dates {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
     .care-tip {
-      background: rgba(15, 23, 42, 0.6);
-      border-left: 3px solid var(--accent);
-      padding: 10px 12px;
-      border-radius: 6px;
-      font-size: 0.9rem;
-      color: #e2e8f0;
+      background: rgba(9, 13, 22, 0.55);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      border-radius: 14px;
+      font-size: 0.88rem;
+      color: #cbd5e1;
+      line-height: 1.6;
     }
-    /* Calendar Grid */
-    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .cal-nav { display: flex; gap: 6px; align-items: center; }
-    .cal-nav button { padding: 4px 10px; font-size: 0.85rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-    .cal-title { font-weight: 700; font-size: 0.95rem; min-width: 110px; text-align: center; }
-    .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
-    .cal-weekdays span { font-size: 0.75rem; color: var(--muted); font-weight: 600; padding-bottom: 4px; }
+
+    /* 月曆網格精緻化 */
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .cal-nav {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+      background: rgba(9, 13, 22, 0.5);
+      padding: 3px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .cal-nav button {
+      padding: 4px 10px;
+      font-size: 0.9rem;
+      background: transparent;
+      color: var(--text);
+      border-radius: 8px;
+      font-weight: 600;
+    }
+
+    .cal-nav button:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .cal-title {
+      font-weight: 600;
+      font-size: 0.88rem;
+      min-width: 96px;
+      text-align: center;
+      color: var(--text);
+    }
+
+    .cal-weekdays, .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 6px;
+      text-align: center;
+    }
+
+    .cal-weekdays span {
+      font-size: 0.72rem;
+      color: var(--muted);
+      font-weight: 500;
+      padding-bottom: 6px;
+    }
+
     .cal-cell {
       aspect-ratio: 1;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 10px;
-      font-size: 0.85rem;
+      border-radius: 50%;
+      font-size: 0.84rem;
       font-weight: 500;
-      color: var(--text);
+      color: #cbd5e1;
       cursor: pointer;
-      border: 1px solid transparent;
+      transition: transform 0.12s ease, background 0.15s ease;
     }
+
+    .cal-cell:not(.empty):active {
+      transform: scale(0.9);
+    }
+
     .cal-cell.empty { cursor: default; }
-    .cal-cell.logged { background: rgba(244, 63, 94, 0.28); color: #fda4af; border-color: rgba(244, 63, 94, 0.5); font-weight: 700; }
-    .cal-cell.predicted { background: rgba(244, 63, 94, 0.12); color: #fecdd3; border: 1px dashed #fb7185; }
-    .cal-cell.pms { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border-color: rgba(245, 158, 11, 0.35); }
-    .cal-cell.ovulation { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
-    .cal-cell.today { box-shadow: 0 0 0 2px var(--accent); font-weight: 800; }
-    .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem; color: var(--muted); justify-content: center; }
-    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
-    /* Forms & Lists */
+
+    .cal-cell.logged {
+      background: linear-gradient(135deg, #f43f5e, #e11d48);
+      color: #ffffff;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(244, 63, 94, 0.35);
+    }
+
+    .cal-cell.predicted {
+      background: var(--rose-bg);
+      color: #fda4af;
+      border: 1px solid rgba(251, 113, 133, 0.35);
+    }
+
+    .cal-cell.pms {
+      background: var(--amber-bg);
+      color: #fcd34d;
+    }
+
+    .cal-cell.ovulation {
+      background: var(--accent-glow);
+      color: var(--accent);
+    }
+
+    .cal-cell.today {
+      outline: 2px solid #ffffff;
+      outline-offset: -2px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .cal-legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+      font-size: 0.74rem;
+      color: var(--muted);
+      justify-content: center;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      margin-right: 5px;
+      vertical-align: middle;
+    }
+
+    /* 表單與按鈕 */
     .form-grid { display: flex; flex-direction: column; gap: 10px; }
     .row { display: flex; gap: 8px; }
+
     input, select {
       flex: 1;
-      background: var(--bg);
+      background: rgba(9, 13, 22, 0.65);
       color: var(--text);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.95rem;
-      outline: none;
-    }
-    input:focus, select:focus { border-color: var(--accent); }
-    button {
-      background: var(--accent);
-      color: #0f172a;
-      border: none;
-      border-radius: 10px;
-      padding: 10px 14px;
+      border-radius: 12px;
+      padding: 11px 13px;
       font-size: 0.92rem;
-      font-weight: 700;
-      cursor: pointer;
+      outline: none;
+      transition: border-color 0.15s ease;
     }
-    button:active { opacity: 0.85; }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+
+    button {
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 11px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);
+      transition: opacity 0.15s ease, transform 0.1s ease;
+    }
+
+    button:active {
+      opacity: 0.88;
+      transform: scale(0.98);
+    }
+
     button.secondary {
-      background: var(--bg);
+      background: rgba(255, 255, 255, 0.05);
       color: var(--text);
       border: 1px solid var(--border);
-      font-weight: 600;
-      font-size: 0.85rem;
+      box-shadow: none;
+      font-weight: 500;
+      font-size: 0.84rem;
     }
+
     button.danger {
       background: transparent;
       color: var(--danger);
+      box-shadow: none;
       padding: 4px 8px;
-      font-size: 0.8rem;
-      font-weight: 600;
+      font-size: 0.78rem;
+      font-weight: 500;
+      opacity: 0.8;
     }
-    #installBtn { display: none; font-size: 0.8rem; padding: 6px 12px; }
-    .actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+
+    #installBtn {
+      display: none;
+      font-size: 0.78rem;
+      padding: 6px 12px;
+      border-radius: 999px;
+    }
+
+    .actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
     .actions-row button { flex: 1; }
+
     ul { list-style: none; }
+
     li {
       display: flex;
       justify-content: space-between;
-      align-items: flex-start;
-      padding: 10px 0;
+      align-items: center;
+      padding: 12px 0;
       border-bottom: 1px solid var(--border);
     }
-    li:last-child { border-bottom: none; }
-    .item-meta { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
-    .pill {
-      background: var(--bg);
-      border: 1px solid var(--border);
+
+    li:last-child { border-bottom: none; padding-bottom: 2px; }
+
+    .item-meta {
+      font-size: 0.8rem;
       color: var(--muted);
-      padding: 1px 7px;
+      margin-top: 3px;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      padding: 2px 8px;
       border-radius: 999px;
-      font-size: 0.75rem;
+      font-size: 0.73rem;
       margin-left: 6px;
     }
   </style>
@@ -171,7 +375,7 @@
   </div>
 
   <!-- 狀態與照護看板 -->
-  <section class="card">
+  <section class="card hero-card">
     <div id="phaseBadge" class="phase-badge">載入中...</div>
     <div id="predDays" class="countdown">--</div>
     <div id="predDetail" class="sub-dates">正在初始化引擎...</div>
@@ -199,10 +403,10 @@
     </div>
     <div id="calendarGrid" class="cal-grid"></div>
     <div class="cal-legend">
-      <span><i class="legend-dot" style="background:#fb7185;"></i>已記錄</span>
-      <span><i class="legend-dot" style="border:1px dashed #fb7185;"></i>預計經期</span>
+      <span><i class="legend-dot" style="background:#f43f5e;"></i>已記錄</span>
+      <span><i class="legend-dot" style="background:rgba(251,113,133,0.45);"></i>預計經期</span>
       <span><i class="legend-dot" style="background:#fbbf24;"></i>PMS 觀察</span>
-      <span><i class="legend-dot" style="background:#38bdf8;"></i>排卵期</span>
+      <span><i class="legend-dot" style="background:#7dd3fc;"></i>排卵期</span>
     </div>
   </section>
 
@@ -225,7 +429,7 @@
 
   <!-- 歷史紀錄 -->
   <section class="card">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
       <h2 style="margin:0;">歷史紀錄</h2>
       <span id="avgCycleBadge" class="pill">平均：28 天</span>
     </div>
