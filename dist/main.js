@@ -58,7 +58,6 @@ async function shareOrDownloadICS(icsContent) {
   const filename = `cycle_alerts_${getLocalTodayStr()}.ics`;
   const file = new File([icsContent], filename, { type: 'text/calendar;charset=utf-8' });
 
-  // Prefer native share sheet on mobile if file sharing is supported
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
@@ -68,12 +67,10 @@ async function shareOrDownloadICS(icsContent) {
       });
       return;
     } catch (err) {
-      // Fall back to download if share sheet fails (ignore user cancel)
       if (err instanceof Error && err.name === 'AbortError') return;
     }
   }
 
-  // Standard download / iOS Safari Calendar preview trigger
   const url = URL.createObjectURL(file);
   const a = document.createElement('a');
   a.href = url;
@@ -84,18 +81,38 @@ async function shareOrDownloadICS(icsContent) {
   URL.revokeObjectURL(url);
 }
 
+/** @param {string} str */
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, (ch) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch)
+  );
+}
+
 // ==========================================
 // 3. Bootstrap & UI Wiring
 // ==========================================
 async function bootstrap() {
-  // Request persistent storage on Android & installed iOS PWAs
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
   }
 
-  // Register Service Worker
+  // Register Service Worker with seamless auto-update
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js').catch(console.error);
+    let refreshing = false;
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
+    navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          reg.update().catch(() => {});
+        }
+      });
+    }).catch(console.error);
   }
 
   // Platform install hints
@@ -130,14 +147,18 @@ async function bootstrap() {
   const initialSnapshot = await loadRawSnapshot();
   const store = new CycleStore(initialSnapshot);
 
-  // Set default input date to today
   const dateInput = /** @type {HTMLInputElement} */ (document.getElementById('dateInput'));
   dateInput.value = getLocalTodayStr();
 
+  const now = new Date();
+  let viewYear = now.getFullYear();
+  let viewMonth = now.getMonth() + 1;
+
   function render() {
     /** @type {DashboardState} */
-    const state = store.get_dashboard_state(getLocalTodayStr());
+    const state = store.get_dashboard_state(getLocalTodayStr(), viewYear, viewMonth);
 
+    // Status & Care Card
     document.getElementById('phaseBadge').textContent = state.phase_name;
     document.getElementById('careTipText').textContent = state.care_tip;
     document.getElementById('avgCycleBadge').textContent = `Avg: ${state.avg_cycle}d`;
@@ -147,13 +168,32 @@ async function bootstrap() {
 
     if (state.has_records && state.days_until_next !== undefined) {
       const days = state.days_until_next;
-      predDaysEl.textContent = days >= 0 ? `In ${days} day${days === 1 ? '' : 's'}` : `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} late`;
+      predDaysEl.textContent =
+        days >= 0
+          ? `In ${days} day${days === 1 ? '' : 's'}`
+          : `${Math.abs(days)} day${Math.abs(days) === 1 ? '' : 's'} late`;
       predDetailEl.textContent = `Next: ${state.next_period_date} • PMS window: ${state.pms_start_date}`;
     } else {
       predDaysEl.textContent = '--';
       predDetailEl.textContent = 'No cycle data logged yet';
     }
 
+    // Monthly Calendar Grid
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    document.getElementById('calMonthTitle').textContent =
+      `${monthNames[state.calendar_month - 1]} ${state.calendar_year}`;
+
+    document.getElementById('calendarGrid').innerHTML = state.calendar_days
+      .map((cell) => {
+        if (cell.day == null) return '<div class="cal-cell empty"></div>';
+        const classes = ['cal-cell'];
+        if (cell.status !== 'none') classes.push(cell.status);
+        if (cell.is_today) classes.push('today');
+        return `<div class="${classes.join(' ')}" data-date="${cell.date_str}">${cell.day}</div>`;
+      })
+      .join('');
+
+    // History List
     const listEl = document.getElementById('recordList');
     if (state.history.length === 0) {
       listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">No entries yet</li>';
@@ -175,7 +215,36 @@ async function bootstrap() {
       .join('');
   }
 
-  // Event: Add Record
+  // Month navigation
+  document.getElementById('prevMonthBtn').addEventListener('click', () => {
+    viewMonth -= 1;
+    if (viewMonth < 1) {
+      viewMonth = 12;
+      viewYear -= 1;
+    }
+    render();
+  });
+
+  document.getElementById('nextMonthBtn').addEventListener('click', () => {
+    viewMonth += 1;
+    if (viewMonth > 12) {
+      viewMonth = 1;
+      viewYear += 1;
+    }
+    render();
+  });
+
+  // Tap calendar day to pre-fill date input
+  document.getElementById('calendarGrid').addEventListener('click', (e) => {
+    const cell = /** @type {HTMLElement} */ (e.target).closest('[data-date]');
+    const pickedDate = cell?.getAttribute('data-date');
+    if (pickedDate) {
+      dateInput.value = pickedDate;
+      dateInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  });
+
+  // Add Record
   document.getElementById('addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const flowInput = /** @type {HTMLSelectElement} */ (document.getElementById('flowInput'));
@@ -196,7 +265,7 @@ async function bootstrap() {
     }
   });
 
-  // Event: Delete Record (delegated)
+  // Delete Record
   document.getElementById('recordList').addEventListener('click', async (e) => {
     const target = /** @type {HTMLElement} */ (e.target);
     const idAttr = target.getAttribute('data-delete-id');
@@ -208,7 +277,7 @@ async function bootstrap() {
     render();
   });
 
-  // Event: Export / Share .ics
+  // Export / Share .ics
   document.getElementById('exportIcsBtn').addEventListener('click', async () => {
     try {
       const ics = store.generate_ics();
@@ -218,7 +287,7 @@ async function bootstrap() {
     }
   });
 
-  // Event: Restore from .ics
+  // Restore from .ics
   const icsFileInput = /** @type {HTMLInputElement} */ (document.getElementById('icsFileInput'));
   document.getElementById('importIcsBtn').addEventListener('click', () => icsFileInput.click());
 
@@ -239,13 +308,6 @@ async function bootstrap() {
   });
 
   render();
-}
-
-/** @param {string} str */
-function escapeHtml(str) {
-  return str.replace(/[&<>"']/g, (ch) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch] || ch)
-  );
 }
 
 bootstrap();

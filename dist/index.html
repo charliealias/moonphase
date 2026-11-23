@@ -69,6 +69,34 @@
       font-size: 0.9rem;
       color: #e2e8f0;
     }
+    /* Calendar Grid */
+    .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .cal-nav { display: flex; gap: 6px; align-items: center; }
+    .cal-nav button { padding: 4px 10px; font-size: 0.85rem; background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+    .cal-title { font-weight: 700; font-size: 0.95rem; min-width: 110px; text-align: center; }
+    .cal-weekdays, .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; text-align: center; }
+    .cal-weekdays span { font-size: 0.72rem; color: var(--muted); font-weight: 600; padding-bottom: 4px; }
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text);
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .cal-cell.empty { cursor: default; }
+    .cal-cell.logged { background: rgba(244, 63, 94, 0.28); color: #fda4af; border-color: rgba(244, 63, 94, 0.5); font-weight: 700; }
+    .cal-cell.predicted { background: rgba(244, 63, 94, 0.12); color: #fecdd3; border: 1px dashed #fb7185; }
+    .cal-cell.pms { background: rgba(245, 158, 11, 0.18); color: #fcd34d; border-color: rgba(245, 158, 11, 0.35); }
+    .cal-cell.ovulation { background: rgba(56, 189, 248, 0.15); color: #7dd3fc; }
+    .cal-cell.today { box-shadow: 0 0 0 2px var(--accent); font-weight: 800; }
+    .cal-legend { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 10px; font-size: 0.75rem; color: var(--muted); justify-content: center; }
+    .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; }
+    /* Forms & Lists */
     .form-grid { display: flex; flex-direction: column; gap: 10px; }
     .row { display: flex; gap: 8px; }
     input, select {
@@ -153,6 +181,28 @@
       <button id="exportIcsBtn">Export / Share .ics</button>
       <button id="importIcsBtn" class="secondary">Restore from .ics</button>
       <input type="file" id="icsFileInput" accept=".ics,text/calendar" hidden />
+    </div>
+  </section>
+
+  <!-- Monthly Calendar Grid -->
+  <section class="card">
+    <div class="cal-header">
+      <h2 style="margin:0;">Calendar</h2>
+      <div class="cal-nav">
+        <button id="prevMonthBtn" type="button">&lsaquo;</button>
+        <span id="calMonthTitle" class="cal-title">--</span>
+        <button id="nextMonthBtn" type="button">&rsaquo;</button>
+      </div>
+    </div>
+    <div class="cal-weekdays">
+      <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
+    </div>
+    <div id="calendarGrid" class="cal-grid"></div>
+    <div class="cal-legend">
+      <span><i class="legend-dot" style="background:#fb7185;"></i>Logged</span>
+      <span><i class="legend-dot" style="border:1px dashed #fb7185;"></i>Predicted</span>
+      <span><i class="legend-dot" style="background:#fbbf24;"></i>PMS</span>
+      <span><i class="legend-dot" style="background:#38bdf8;"></i>Ovulation</span>
     </div>
   </section>
 
