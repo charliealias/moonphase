@@ -36,7 +36,7 @@
       background: radial-gradient(circle at 50% -10%, #17233b 0%, var(--bg) 55%);
       background-color: var(--bg);
       color: var(--text);
-      padding: calc(18px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
       max-width: 440px;
       margin: 0 auto;
       line-height: 1.55;
@@ -44,12 +44,14 @@
       min-height: 100vh;
     }
 
+    /* 頂部標題列與精簡工具列 */
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 18px;
-      padding: 0 4px;
+      gap: 8px;
+      margin-bottom: 14px;
+      padding: 0 2px;
     }
 
     h1 {
@@ -59,6 +61,40 @@
       background: linear-gradient(135deg, #f8fafc 30%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
+      flex-shrink: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon-pill-btn {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 5px 11px;
+      font-size: 0.76rem;
+      font-weight: 500;
+      box-shadow: none;
+      white-space: nowrap;
+    }
+
+    .icon-pill-btn.primary-pill {
+      background: var(--accent-glow);
+      color: var(--accent);
+      border-color: rgba(125, 211, 252, 0.3);
+      font-weight: 600;
+    }
+
+    #installBtn {
+      display: none;
+      background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+      color: #ffffff;
+      border: none;
+      font-weight: 600;
     }
 
     h2 {
@@ -80,9 +116,16 @@
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    .hero-card {
-      background: linear-gradient(160deg, rgba(30, 41, 66, 0.85) 0%, rgba(18, 24, 38, 0.9) 100%);
+    /* 狀態 + 月曆 + 歷史一體化主卡片 */
+    .unified-card {
+      background: linear-gradient(165deg, rgba(30, 41, 66, 0.85) 0%, rgba(17, 23, 37, 0.92) 100%);
       border: 1px solid var(--border-strong);
+    }
+
+    .card-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
     }
 
     .ios-hint {
@@ -90,10 +133,18 @@
       background: rgba(56, 189, 248, 0.1);
       border: 1px solid rgba(56, 189, 248, 0.28);
       color: #bae6fd;
-      padding: 11px 14px;
+      padding: 10px 14px;
       border-radius: 14px;
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       margin-bottom: 14px;
+    }
+
+    .status-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+      margin-bottom: 4px;
     }
 
     .phase-badge {
@@ -104,41 +155,41 @@
       border: 1px solid rgba(125, 211, 252, 0.25);
       padding: 4px 12px;
       border-radius: 999px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 600;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .countdown {
-      font-size: 1.95rem;
+      font-size: 1.85rem;
       font-weight: 700;
       letter-spacing: -0.02em;
       color: #ffffff;
-      margin: 2px 0 4px;
+      line-height: 1.2;
     }
 
     .sub-dates {
-      font-size: 0.82rem;
+      font-size: 0.8rem;
       color: var(--muted);
-      margin-bottom: 14px;
+      margin: 4px 0 12px;
     }
 
     .care-tip {
-      background: rgba(9, 13, 22, 0.55);
+      background: rgba(9, 13, 22, 0.52);
       border: 1px solid var(--border);
-      padding: 12px 14px;
+      padding: 11px 13px;
       border-radius: 14px;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       color: #cbd5e1;
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
-    /* 月曆 */
+    /* 月曆區塊（無縫融入主卡片） */
     .cal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 14px;
+      margin-bottom: 12px;
     }
 
     .cal-nav {
@@ -152,7 +203,7 @@
     }
 
     .cal-nav button {
-      padding: 4px 10px;
+      padding: 3px 10px;
       font-size: 0.9rem;
       background: transparent;
       color: var(--text);
@@ -163,8 +214,8 @@
 
     .cal-title {
       font-weight: 600;
-      font-size: 0.88rem;
-      min-width: 96px;
+      font-size: 0.86rem;
+      min-width: 92px;
       text-align: center;
       color: var(--text);
     }
@@ -172,7 +223,7 @@
     .cal-weekdays, .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 5px;
       text-align: center;
     }
 
@@ -180,7 +231,7 @@
       font-size: 0.72rem;
       color: var(--muted);
       font-weight: 500;
-      padding-bottom: 6px;
+      padding-bottom: 4px;
     }
 
     .cal-cell {
@@ -231,10 +282,8 @@
       display: flex;
       gap: 14px;
       flex-wrap: wrap;
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid var(--border);
-      font-size: 0.74rem;
+      margin-top: 12px;
+      font-size: 0.73rem;
       color: var(--muted);
       justify-content: center;
     }
@@ -246,6 +295,47 @@
       border-radius: 50%;
       margin-right: 5px;
       vertical-align: middle;
+    }
+
+    /* 歷史紀錄摺疊抽屜（內嵌於主卡片底部） */
+    details.history-drawer summary {
+      list-style: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    details.history-drawer summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .drawer-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.84rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .drawer-chevron {
+      display: inline-block;
+      font-size: 0.72rem;
+      transition: transform 0.2s ease;
+      color: var(--muted);
+    }
+
+    details.history-drawer[open] .drawer-chevron {
+      transform: rotate(90deg);
+      color: var(--accent);
+    }
+
+    details.history-drawer[open] summary {
+      margin-bottom: 8px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
     }
 
     /* 表單與膠囊標籤 */
@@ -304,15 +394,6 @@
 
     button:active { opacity: 0.88; transform: scale(0.98); }
 
-    button.secondary {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--text);
-      border: 1px solid var(--border);
-      box-shadow: none;
-      font-weight: 500;
-      font-size: 0.84rem;
-    }
-
     button.danger {
       background: transparent;
       color: var(--danger);
@@ -323,21 +404,6 @@
       opacity: 0.85;
     }
 
-    #installBtn {
-      display: none;
-      font-size: 0.78rem;
-      padding: 6px 12px;
-      border-radius: 999px;
-    }
-
-    .actions-row {
-      display: flex;
-      gap: 8px;
-      margin-top: 14px;
-    }
-
-    .actions-row button { flex: 1; }
-
     ul { list-style: none; }
 
     li {
@@ -345,16 +411,16 @@
       justify-content: space-between;
       align-items: center;
       gap: 8px;
-      padding: 12px 0;
+      padding: 10px 0;
       border-bottom: 1px solid var(--border);
     }
 
-    li:last-child { border-bottom: none; padding-bottom: 2px; }
+    li:last-child { border-bottom: none; padding-bottom: 0; }
 
     .item-meta {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       color: var(--muted);
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
     .pill {
@@ -383,78 +449,35 @@
       color: var(--text);
       border: 1px solid var(--border);
     }
-
-    /* 歷史紀錄摺疊抽屜 */
-    details.history-drawer summary {
-      list-style: none;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-
-    details.history-drawer summary::-webkit-details-marker {
-      display: none;
-    }
-
-    .drawer-title {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-    }
-
-    .drawer-chevron {
-      display: inline-block;
-      font-size: 0.75rem;
-      transition: transform 0.2s ease;
-      color: var(--muted);
-    }
-
-    details.history-drawer[open] .drawer-chevron {
-      transform: rotate(90deg);
-      color: var(--accent);
-    }
-
-    details.history-drawer[open] summary {
-      margin-bottom: 10px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid var(--border);
-    }
-
   </style>
 </head>
 <body>
 
+  <!-- 頂部標題列：集中放置安裝與 .ics 匯出/還原 -->
   <header>
     <h1>MoonPhase</h1>
-    <button id="installBtn">安裝 App</button>
+    <div class="header-actions">
+      <button id="installBtn" class="icon-pill-btn">安裝</button>
+      <button id="exportIcsBtn" class="icon-pill-btn primary-pill">匯出 .ics</button>
+      <button id="importIcsBtn" class="icon-pill-btn">還原</button>
+      <input type="file" id="icsFileInput" accept=".ics,text/calendar" hidden />
+    </div>
   </header>
 
   <div id="iosInstallHint" class="ios-hint">
     iPhone 安裝提示：點擊 Safari 底部的 <strong>分享</strong> 圖示，選擇 <strong>「加入主畫面」</strong> 並從桌面開啟，即可永久保存離線資料。
   </div>
 
-  <!-- 狀態與照護看板 -->
-  <section class="card hero-card">
+  <!-- 一體化主看板：狀態倒數 + 週期月曆 + 歷史抽屜 -->
+  <section class="card unified-card">
     <div id="phaseBadge" class="phase-badge">載入中...</div>
     <div id="predDays" class="countdown">--</div>
     <div id="predDetail" class="sub-dates">正在初始化引擎...</div>
     <div id="careTipText" class="care-tip"></div>
 
-    <div class="actions-row">
-      <button id="exportIcsBtn">匯出 / 分享 .ics</button>
-      <button id="importIcsBtn" class="secondary">從 .ics 還原</button>
-      <input type="file" id="icsFileInput" accept=".ics,text/calendar" hidden />
-    </div>
-  </section>
+    <div class="card-divider"></div>
 
-  <!-- 月曆檢視 -->
-  <section class="card">
+    <!-- 週期月曆 -->
     <div class="cal-header">
       <h2 style="margin:0;">週期月曆</h2>
       <div class="cal-nav">
@@ -473,9 +496,10 @@
       <span><i class="legend-dot" style="background:#fbbf24;"></i>PMS 觀察</span>
       <span><i class="legend-dot" style="background:#7dd3fc;"></i>排卵期</span>
     </div>
-  </section>
-  <!-- 歷史紀錄（可收放抽屜，位於月曆下方） -->
-  <section class="card" style="padding: 14px 18px;">
+
+    <div class="card-divider"></div>
+
+    <!-- 歷史紀錄摺疊抽屜 -->
     <details id="historyDrawer" class="history-drawer">
       <summary>
         <span class="drawer-title">
@@ -488,7 +512,7 @@
     </details>
   </section>
 
-  <!-- 新增紀錄 -->
+  <!-- 快速新增紀錄卡片 -->
   <section class="card">
     <h2>記錄經期開始日</h2>
     <form id="addForm" class="form-grid">
