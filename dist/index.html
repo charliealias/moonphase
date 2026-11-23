@@ -53,14 +53,33 @@
       padding: 0 2px;
     }
 
+    .brand-title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      flex-shrink: 0;
+    }
+
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #1e2d4a, #0f172a);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
     h1 {
-      font-size: 1.2rem;
+      font-size: 1.18rem;
       font-weight: 700;
       letter-spacing: 0.04em;
       background: linear-gradient(135deg, #f8fafc 30%, #94a3b8 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      flex-shrink: 0;
     }
 
     .header-actions {
@@ -513,8 +532,80 @@
 </head>
 <body>
 
+  <!-- 頂部標題列：Q版雙角色內嵌 SVG 徽章 + 工具按鈕 -->
   <header>
-    <h1>MoonPhase</h1>
+    <div class="brand-title">
+      <div class="brand-badge" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="28" height="28" xmlns="http://www.w3.org/2000/svg">
+          <!-- 頂部小新月 -->
+          <path d="M31 7a6.5 6.5 0 1 0 5.6 9.8A5.4 5.4 0 0 1 31 7z" fill="#fde047" opacity="0.95"/>
+
+          <!-- 左側：Q 版小熊貓 -->
+          <g transform="translate(20, 38)">
+            <!-- 耳朵（白邊 + 深棕耳心） -->
+            <ellipse cx="-9.5" cy="-9.5" rx="4.6" ry="5.4" transform="rotate(-24 -9.5 -9.5)" fill="#faf5f0"/>
+            <ellipse cx="-9.2" cy="-9.2" rx="2.7" ry="3.3" transform="rotate(-24 -9.2 -9.2)" fill="#732e1f"/>
+            <ellipse cx="9.5" cy="-9.5" rx="4.6" ry="5.4" transform="rotate(24 9.5 -9.5)" fill="#faf5f0"/>
+            <ellipse cx="9.2" cy="-9.2" rx="2.7" ry="3.3" transform="rotate(24 9.2 -9.2)" fill="#732e1f"/>
+            <!-- 紅棕圓臉 -->
+            <ellipse cx="0" cy="0" rx="12.5" ry="10.8" fill="#d9542e"/>
+            <!-- 兩頰白絨毛 -->
+            <ellipse cx="-7.5" cy="2.8" rx="4.8" ry="3.6" fill="#faf5f0"/>
+            <ellipse cx="7.5" cy="2.8" rx="4.8" ry="3.6" fill="#faf5f0"/>
+            <!-- 白色口鼻 -->
+            <ellipse cx="0" cy="4.2" rx="4.8" ry="3.6" fill="#faf5f0"/>
+            <!-- 招牌白眉點 -->
+            <ellipse cx="-4.2" cy="-3.8" rx="2.1" ry="1.2" transform="rotate(-12 -4.2 -3.8)" fill="#faf5f0"/>
+            <ellipse cx="4.2" cy="-3.8" rx="2.1" ry="1.2" transform="rotate(12 4.2 -3.8)" fill="#faf5f0"/>
+            <!-- 深棕淚腺紋 -->
+            <ellipse cx="-4.8" cy="1.2" rx="1.8" ry="3.1" fill="#5c2117"/>
+            <ellipse cx="4.8" cy="1.2" rx="1.8" ry="3.1" fill="#5c2117"/>
+            <!-- 圓眼與高光 -->
+            <circle cx="-4.8" cy="-0.4" r="1.7" fill="#1e1414"/>
+            <circle cx="-5.3" cy="-0.9" r="0.6" fill="#ffffff"/>
+            <circle cx="4.8" cy="-0.4" r="1.7" fill="#1e1414"/>
+            <circle cx="4.3" cy="-0.9" r="0.6" fill="#ffffff"/>
+            <!-- 粉紅腮紅 -->
+            <ellipse cx="-7.8" cy="2.2" rx="2" ry="1.1" fill="#fb7185" opacity="0.6"/>
+            <ellipse cx="7.8" cy="2.2" rx="2" ry="1.1" fill="#fb7185" opacity="0.6"/>
+            <!-- 鼻頭與微笑 -->
+            <ellipse cx="0" cy="2.9" rx="1.4" ry="1" fill="#261919"/>
+            <path d="M-1.5 4.8 Q0 5.8 1.5 4.8" stroke="#401d19" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+          </g>
+
+          <!-- 右側：Q 版母獅子 -->
+          <g transform="translate(44, 38)">
+            <!-- 圓耳朵 -->
+            <circle cx="-8.8" cy="-8.5" r="4.3" fill="#f0b85c"/>
+            <circle cx="-8.8" cy="-8.5" r="2.4" fill="#7a4724"/>
+            <circle cx="8.8" cy="-8.5" r="4.3" fill="#f0b85c"/>
+            <circle cx="8.8" cy="-8.5" r="2.4" fill="#7a4724"/>
+            <!-- 金沙色圓臉 -->
+            <ellipse cx="0" cy="0" rx="12" ry="10.8" fill="#f2bf67"/>
+            <!-- 奶油口鼻 -->
+            <ellipse cx="0" cy="3.8" rx="5.2" ry="3.8" fill="#fcf0d6"/>
+            <!-- 大眼、小睫毛與高光 -->
+            <circle cx="-4.8" cy="-0.4" r="1.75" fill="#291c14"/>
+            <path d="M-6.2 -1.2 L-7.4 -1.9" stroke="#291c14" stroke-width="0.9" stroke-linecap="round"/>
+            <circle cx="-5.3" cy="-0.9" r="0.6" fill="#ffffff"/>
+            <circle cx="4.8" cy="-0.4" r="1.75" fill="#291c14"/>
+            <path d="M6.2 -1.2 L7.4 -1.9" stroke="#291c14" stroke-width="0.9" stroke-linecap="round"/>
+            <circle cx="4.3" cy="-0.9" r="0.6" fill="#ffffff"/>
+            <!-- 暖珊瑚腮紅 -->
+            <ellipse cx="-7.6" cy="2.2" rx="2" ry="1.1" fill="#f43f5e" opacity="0.45"/>
+            <ellipse cx="7.6" cy="2.2" rx="2" ry="1.1" fill="#f43f5e" opacity="0.45"/>
+            <!-- 粉棕鼻頭與微笑 -->
+            <ellipse cx="0" cy="2.7" rx="1.6" ry="1.1" fill="#8c3d38"/>
+            <path d="M-1.6 4.7 Q0 5.7 1.6 4.7" stroke="#592e1e" stroke-width="0.9" fill="none" stroke-linecap="round"/>
+          </g>
+
+          <!-- 中央小愛心 -->
+          <path d="M32 28.5c-1.1-1.5-3.3-1.2-3.3.7 0 1.6 3.3 3.6 3.3 3.6s3.3-2 3.3-3.6c0-1.9-2.2-2.2-3.3-.7z" fill="#fb7185"/>
+        </svg>
+      </div>
+      <h1>MoonPhase</h1>
+    </div>
+
     <div class="header-actions">
       <button id="installBtn" class="icon-pill-btn">安裝</button>
       <button id="exportIcsBtn" class="icon-pill-btn primary-pill">匯出 .ics</button>
