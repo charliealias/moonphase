@@ -44,7 +44,6 @@
       min-height: 100vh;
     }
 
-    /* 頂部標題列與精簡工具列 */
     header {
       display: flex;
       justify-content: space-between;
@@ -116,7 +115,6 @@
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
     }
 
-    /* 狀態 + 月曆 + 歷史一體化主卡片 */
     .unified-card {
       background: linear-gradient(165deg, rgba(30, 41, 66, 0.85) 0%, rgba(17, 23, 37, 0.92) 100%);
       border: 1px solid var(--border-strong);
@@ -139,14 +137,6 @@
       margin-bottom: 14px;
     }
 
-    .status-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 8px;
-      margin-bottom: 4px;
-    }
-
     .phase-badge {
       display: inline-flex;
       align-items: center;
@@ -161,6 +151,7 @@
     }
 
     .countdown {
+      display: block;
       font-size: 1.85rem;
       font-weight: 700;
       letter-spacing: -0.02em;
@@ -169,6 +160,7 @@
     }
 
     .sub-dates {
+      display: block;
       font-size: 0.8rem;
       color: var(--muted);
       margin: 4px 0 12px;
@@ -184,17 +176,35 @@
       line-height: 1.55;
     }
 
-    /* 月曆區塊（無縫融入主卡片） */
+    /* 月曆導覽列（含「今天」按鈕） */
     .cal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
+      gap: 6px;
+    }
+
+    .cal-controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .today-btn {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--accent);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px 9px;
+      font-size: 0.76rem;
+      font-weight: 600;
+      box-shadow: none;
     }
 
     .cal-nav {
       display: flex;
-      gap: 4px;
+      gap: 2px;
       align-items: center;
       background: rgba(9, 13, 22, 0.5);
       padding: 3px;
@@ -203,7 +213,7 @@
     }
 
     .cal-nav button {
-      padding: 3px 10px;
+      padding: 3px 9px;
       font-size: 0.9rem;
       background: transparent;
       color: var(--text);
@@ -214,8 +224,8 @@
 
     .cal-title {
       font-weight: 600;
-      font-size: 0.86rem;
-      min-width: 92px;
+      font-size: 0.84rem;
+      min-width: 86px;
       text-align: center;
       color: var(--text);
     }
@@ -297,7 +307,7 @@
       vertical-align: middle;
     }
 
-    /* 歷史紀錄摺疊抽屜（內嵌於主卡片底部） */
+    /* 原生 <details> 歷史摺疊抽屜 */
     details.history-drawer summary {
       list-style: none;
       display: flex;
@@ -307,9 +317,7 @@
       user-select: none;
     }
 
-    details.history-drawer summary::-webkit-details-marker {
-      display: none;
-    }
+    details.history-drawer summary::-webkit-details-marker { display: none; }
 
     .drawer-title {
       display: flex;
@@ -324,7 +332,6 @@
       display: inline-block;
       font-size: 0.72rem;
       transition: transform 0.2s ease;
-      color: var(--muted);
     }
 
     details.history-drawer[open] .drawer-chevron {
@@ -338,7 +345,7 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* 表單與膠囊標籤 */
+    /* 表單與純 CSS 原生 Checkbox 膠囊標籤 */
     .form-grid { display: flex; flex-direction: column; gap: 10px; }
     .row { display: flex; gap: 8px; }
 
@@ -356,13 +363,14 @@
 
     input:focus, select:focus { border-color: var(--accent); }
 
-    .chip-group {
+    fieldset.chip-group {
+      border: none;
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
     }
 
-    .chip {
+    label.chip {
       background: rgba(255, 255, 255, 0.05);
       color: var(--muted);
       border: 1px solid var(--border);
@@ -370,10 +378,19 @@
       padding: 5px 11px;
       font-size: 0.78rem;
       font-weight: 500;
-      box-shadow: none;
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.15s ease;
     }
 
-    .chip.active {
+    label.chip input[type="checkbox"] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* 純 CSS 控制勾選高亮，無需 JS */
+    label.chip:has(input:checked) {
       background: var(--accent-glow);
       color: var(--accent);
       border-color: rgba(125, 211, 252, 0.45);
@@ -393,6 +410,13 @@
     }
 
     button:active { opacity: 0.88; transform: scale(0.98); }
+
+    button.secondary {
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
 
     button.danger {
       background: transparent;
@@ -449,11 +473,46 @@
       color: var(--text);
       border: 1px solid var(--border);
     }
+
+    /* 原生 HTML5 <dialog> 模態視窗 */
+    dialog {
+      margin: auto;
+      background: #151c2c;
+      color: var(--text);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 20px;
+      max-width: 340px;
+      width: calc(100% - 32px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+    }
+
+    dialog::backdrop {
+      background: rgba(9, 13, 22, 0.72);
+      backdrop-filter: blur(4px);
+    }
+
+    .dialog-msg {
+      font-size: 0.92rem;
+      line-height: 1.5;
+      margin-bottom: 16px;
+      color: #e2e8f0;
+    }
+
+    .dialog-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .dialog-actions button {
+      padding: 8px 14px;
+      font-size: 0.84rem;
+    }
   </style>
 </head>
 <body>
 
-  <!-- 頂部標題列：集中放置安裝與 .ics 匯出/還原 -->
   <header>
     <h1>MoonPhase</h1>
     <div class="header-actions">
@@ -468,22 +527,25 @@
     iPhone 安裝提示：點擊 Safari 底部的 <strong>分享</strong> 圖示，選擇 <strong>「加入主畫面」</strong> 並從桌面開啟，即可永久保存離線資料。
   </div>
 
-  <!-- 一體化主看板：狀態倒數 + 週期月曆 + 歷史抽屜 -->
+  <!-- 一體化主看板 -->
   <section class="card unified-card">
-    <div id="phaseBadge" class="phase-badge">載入中...</div>
-    <div id="predDays" class="countdown">--</div>
-    <div id="predDetail" class="sub-dates">正在初始化引擎...</div>
+    <output id="phaseBadge" class="phase-badge">載入中...</output>
+    <output id="predDays" class="countdown">--</output>
+    <output id="predDetail" class="sub-dates">正在初始化引擎...</output>
     <div id="careTipText" class="care-tip"></div>
 
     <div class="card-divider"></div>
 
-    <!-- 週期月曆 -->
+    <!-- 週期月曆（含「今天」快速按鈕） -->
     <div class="cal-header">
       <h2 style="margin:0;">週期月曆</h2>
-      <div class="cal-nav">
-        <button id="prevMonthBtn" type="button">&lsaquo;</button>
-        <span id="calMonthTitle" class="cal-title">--</span>
-        <button id="nextMonthBtn" type="button">&rsaquo;</button>
+      <div class="cal-controls">
+        <button id="todayBtn" type="button" class="today-btn">今天</button>
+        <div class="cal-nav">
+          <button id="prevMonthBtn" type="button" aria-label="上個月">&lsaquo;</button>
+          <span id="calMonthTitle" class="cal-title">--</span>
+          <button id="nextMonthBtn" type="button" aria-label="下個月">&rsaquo;</button>
+        </div>
       </div>
     </div>
     <div class="cal-weekdays">
@@ -499,7 +561,7 @@
 
     <div class="card-divider"></div>
 
-    <!-- 歷史紀錄摺疊抽屜 -->
+    <!-- 原生 <details> 歷史紀錄摺疊抽屜 -->
     <details id="historyDrawer" class="history-drawer">
       <summary>
         <span class="drawer-title">
@@ -512,18 +574,18 @@
     </details>
   </section>
 
-  <!-- 快速新增紀錄卡片 -->
+  <!-- 快速新增紀錄表單 -->
   <section class="card">
     <h2>記錄經期開始日</h2>
     <form id="addForm" class="form-grid">
-      <input type="date" id="dateInput" required />
+      <input type="date" id="dateInput" name="date" required />
       <div class="row">
-        <select id="flowInput">
+        <select id="flowInput" name="flow">
           <option value="正常">經血量：正常</option>
           <option value="偏多">經血量：偏多</option>
           <option value="偏少">經血量：偏少</option>
         </select>
-        <select id="durationInput">
+        <select id="durationInput" name="duration">
           <option value="">天數：進行中 (預估)</option>
           <option value="3">持續 3 天</option>
           <option value="4">持續 4 天</option>
@@ -534,21 +596,31 @@
         </select>
       </div>
 
-      <div id="symptomChips" class="chip-group">
-        <button type="button" class="chip" data-tag="經痛">經痛</button>
-        <button type="button" class="chip" data-tag="腰痠">腰痠</button>
-        <button type="button" class="chip" data-tag="嗜甜">嗜甜</button>
-        <button type="button" class="chip" data-tag="疲倦">疲倦</button>
-        <button type="button" class="chip" data-tag="水腫">水腫</button>
-        <button type="button" class="chip" data-tag="情緒敏感">情緒敏感</button>
-        <button type="button" class="chip" data-tag="頭痛">頭痛</button>
-        <button type="button" class="chip" data-tag="止痛藥">止痛藥</button>
-      </div>
+      <!-- 原生 Checkbox 膠囊標籤（純 CSS 狀態管理） -->
+      <fieldset id="symptomChips" class="chip-group">
+        <label class="chip"><input type="checkbox" name="symptom" value="經痛" />經痛</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="腰痠" />腰痠</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="嗜甜" />嗜甜</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="疲倦" />疲倦</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="水腫" />水腫</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="情緒敏感" />情緒敏感</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="頭痛" />頭痛</label>
+        <label class="chip"><input type="checkbox" name="symptom" value="止痛藥" />止痛藥</label>
+      </fieldset>
 
-      <input type="text" id="notesInput" placeholder="點選上方標籤或自行輸入備註..." />
+      <input type="text" id="notesInput" name="notes" placeholder="補充其他備註（選填）..." />
       <button type="submit">儲存紀錄</button>
     </form>
   </section>
+
+  <!-- 原生 HTML5 提示 / 確認視窗（取代系統 alert / confirm） -->
+  <dialog id="appDialog">
+    <p id="dialogMessage" class="dialog-msg"></p>
+    <div class="dialog-actions">
+      <button id="dialogCancelBtn" type="button" class="secondary">取消</button>
+      <button id="dialogConfirmBtn" type="button">確定</button>
+    </div>
+  </dialog>
 
   <script type="module" src="./main.js"></script>
 </body>

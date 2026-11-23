@@ -43,7 +43,40 @@ async function saveRawSnapshot(data) {
 }
 
 // ==========================================
-// 2. Helpers (Local Date & Web Share / Blob)
+// 2. Native <dialog> Helpers (取代 alert / confirm)
+// ==========================================
+/**
+ * @param {string} message
+ * @param {boolean} [isConfirm]
+ * @returns {Promise<boolean>}
+ */
+function showModal(message, isConfirm = false) {
+  const dialog = /** @type {HTMLDialogElement} */ (document.getElementById('appDialog'));
+  const msgEl = document.getElementById('dialogMessage');
+  const cancelBtn = /** @type {HTMLButtonElement} */ (document.getElementById('dialogCancelBtn'));
+  const confirmBtn = /** @type {HTMLButtonElement} */ (document.getElementById('dialogConfirmBtn'));
+
+  msgEl.textContent = message;
+  cancelBtn.style.display = isConfirm ? 'inline-block' : 'none';
+
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      dialog.close();
+      confirmBtn.removeEventListener('click', onConfirm);
+      cancelBtn.removeEventListener('click', onCancel);
+      resolve(result);
+    };
+    const onConfirm = () => cleanup(true);
+    const onCancel = () => cleanup(false);
+
+    confirmBtn.addEventListener('click', onConfirm);
+    cancelBtn.addEventListener('click', onCancel);
+    dialog.showModal();
+  });
+}
+
+// ==========================================
+// 3. Date & Web Share Helpers
 // ==========================================
 function getLocalTodayStr() {
   const now = new Date();
@@ -89,17 +122,15 @@ function escapeHtml(str) {
 }
 
 // ==========================================
-// 3. Bootstrap & UI Wiring
+// 4. Bootstrap & UI Wiring
 // ==========================================
 async function bootstrap() {
   if (navigator.storage && navigator.storage.persist) {
     navigator.storage.persist().catch(() => {});
   }
 
-  // Service Worker 自動更新
   if ('serviceWorker' in navigator) {
     let refreshing = false;
-
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       if (refreshing) return;
       refreshing = true;
@@ -108,14 +139,11 @@ async function bootstrap() {
 
     navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((reg) => {
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          reg.update().catch(() => {});
-        }
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
       });
     }).catch(console.error);
   }
 
-  // iOS / Android 安裝提示
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isStandalone =
     window.matchMedia('(display-mode: standalone)').matches ||
@@ -142,11 +170,10 @@ async function bootstrap() {
     deferredPrompt = null;
   });
 
-  // 初始化 Rust Wasm Store
   await init();
-  const initialSnapshot = await loadRawSnapshot();
-  const store = new CycleStore(initialSnapshot);
+  const store = new CycleStore(await loadRawSnapshot());
 
+  const addForm = /** @type {HTMLFormElement} */ (document.getElementById('addForm'));
   const dateInput = /** @type {HTMLInputElement} */ (document.getElementById('dateInput'));
   dateInput.value = getLocalTodayStr();
 
@@ -158,13 +185,14 @@ async function bootstrap() {
     /** @type {DashboardState} */
     const state = store.get_dashboard_state(getLocalTodayStr(), viewYear, viewMonth);
 
-    // 狀態與照護看板
     document.getElementById('phaseBadge').textContent = state.phase_name;
     document.getElementById('careTipText').textContent = state.care_tip;
     document.getElementById('avgCycleBadge').textContent =
       `週期 ${state.avg_cycle}d ｜ 經期 ${state.avg_duration}d`;
+
     const countEl = document.getElementById('historyCount');
     if (countEl) countEl.textContent = `(${state.history.length})`;
+
     const predDaysEl = document.getElementById('predDays');
     const predDetailEl = document.getElementById('predDetail');
 
@@ -178,7 +206,6 @@ async function bootstrap() {
       predDetailEl.textContent = '尚未建立任何週期紀錄';
     }
 
-    // 月曆網格
     document.getElementById('calMonthTitle').textContent =
       `${state.calendar_year} 年 ${state.calendar_month} 月`;
 
@@ -192,7 +219,6 @@ async function bootstrap() {
       })
       .join('');
 
-    // 歷史紀錄列表（含一鍵修改行經天數下拉選單）
     const listEl = document.getElementById('recordList');
     if (state.history.length === 0) {
       listEl.innerHTML = '<li style="color:var(--muted); justify-content:center;">尚無紀錄</li>';
@@ -223,14 +249,14 @@ async function bootstrap() {
             <select class="mini-select" data-duration-id="${item.id}" aria-label="行經天數">
               ${optionsHtml}
             </select>
-            <button class="danger" data-delete-id="${item.id}">刪除</button>
+            <button type="button" class="danger" data-delete-id="${item.id}">刪除</button>
           </div>
         </li>`;
       })
       .join('');
   }
 
-  // 月份切換
+  // 月份切換與「今天」一鍵跳回
   document.getElementById('prevMonthBtn').addEventListener('click', () => {
     viewMonth -= 1;
     if (viewMonth < 1) {
@@ -249,6 +275,14 @@ async function bootstrap() {
     render();
   });
 
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    const today = new Date();
+    viewYear = today.getFullYear();
+    viewMonth = today.getMonth() + 1;
+    dateInput.value = getLocalTodayStr();
+    render();
+  });
+
   // 點擊月曆日期自動填入表單
   document.getElementById('calendarGrid').addEventListener('click', (e) => {
     const cell = /** @type {HTMLElement} */ (e.target).closest('[data-date]');
@@ -259,68 +293,34 @@ async function bootstrap() {
     }
   });
 
-  // 快速症狀標籤多選與備註欄雙向同步
-  const notesInput = /** @type {HTMLInputElement} */ (document.getElementById('notesInput'));
-  const symptomChipsEl = document.getElementById('symptomChips');
-
-  function syncChipStates() {
-    if (!symptomChipsEl) return;
-    const currentTokens = notesInput.value
-      .split(/[、,，]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    symptomChipsEl.querySelectorAll('[data-tag]').forEach((btn) => {
-      const tag = btn.getAttribute('data-tag') || '';
-      btn.classList.toggle('active', currentTokens.includes(tag));
-    });
-  }
-
-  symptomChipsEl?.addEventListener('click', (e) => {
-    const btn = /** @type {HTMLElement} */ (e.target).closest('[data-tag]');
-    const tag = btn?.getAttribute('data-tag');
-    if (!tag) return;
-
-    const tokens = notesInput.value
-      .split(/[、,，]/)
-      .map((s) => s.trim())
-      .filter(Boolean);
-
-    const idx = tokens.indexOf(tag);
-    if (idx >= 0) {
-      tokens.splice(idx, 1);
-    } else {
-      tokens.push(tag);
-    }
-
-    notesInput.value = tokens.join('、');
-    syncChipStates();
-  });
-
-  notesInput.addEventListener('input', syncChipStates);
-
-  // 新增紀錄
-  document.getElementById('addForm').addEventListener('submit', async (e) => {
+  // 新增紀錄（透過原生 FormData 自動彙整勾選的 Checkbox 標籤與文字備註）
+  addForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const flowInput = /** @type {HTMLSelectElement} */ (document.getElementById('flowInput'));
-    const durationInput = /** @type {HTMLSelectElement} */ (document.getElementById('durationInput'));
-    const durVal = durationInput.value ? Number(durationInput.value) : undefined;
+    const formData = new FormData(addForm);
+    const dateVal = String(formData.get('date') || '');
+    const flowVal = String(formData.get('flow') || '正常');
+    const rawDur = String(formData.get('duration') || '');
+    const durVal = rawDur ? Number(rawDur) : undefined;
+
+    const checkedSymptoms = formData.getAll('symptom').map(String);
+    const extraNote = String(formData.get('notes') || '').trim();
+    if (extraNote) checkedSymptoms.push(extraNote);
+    const combinedNotes = checkedSymptoms.join('、');
 
     try {
       const snapshot = store.add_record(
         BigInt(Date.now()),
-        dateInput.value,
-        flowInput.value,
-        notesInput.value.trim(),
+        dateVal,
+        flowVal,
+        combinedNotes,
         durVal
       );
       await saveRawSnapshot(snapshot);
-      notesInput.value = '';
-      durationInput.value = '';
-      syncChipStates();
+      addForm.reset();
+      dateInput.value = getLocalTodayStr();
       render();
     } catch (err) {
-      alert(String(err));
+      await showModal(String(err));
     }
   });
 
@@ -336,16 +336,18 @@ async function bootstrap() {
       await saveRawSnapshot(snapshot);
       render();
     } catch (err) {
-      alert(String(err));
+      await showModal(String(err));
     }
   });
 
-  // 歷史列表：刪除紀錄
+  // 歷史列表：原生 <dialog> 刪除確認
   document.getElementById('recordList').addEventListener('click', async (e) => {
     const target = /** @type {HTMLElement} */ (e.target);
     const idAttr = target.getAttribute('data-delete-id');
     if (!idAttr) return;
-    if (!confirm('確定要刪除此筆紀錄嗎？')) return;
+
+    const ok = await showModal('確定要刪除此筆紀錄嗎？', true);
+    if (!ok) return;
 
     const snapshot = store.delete_record(BigInt(idAttr));
     await saveRawSnapshot(snapshot);
@@ -358,7 +360,7 @@ async function bootstrap() {
       const ics = store.generate_ics();
       await shareOrDownloadICS(ics);
     } catch (err) {
-      alert(String(err));
+      await showModal(String(err));
     }
   });
 
@@ -374,9 +376,9 @@ async function bootstrap() {
       const snapshot = store.import_from_ics(text);
       await saveRawSnapshot(snapshot);
       render();
-      alert('已成功從 .ics 檔案還原歷史紀錄！');
+      await showModal('已成功從 .ics 檔案還原歷史紀錄！');
     } catch (err) {
-      alert(String(err));
+      await showModal(String(err));
     } finally {
       icsFileInput.value = '';
     }
